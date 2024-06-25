@@ -6,7 +6,13 @@ namespace BendAssist.App.FileHandling;
 #region class GeoWriter ---------------------------------------------------------------------------
 public class GeoWriter {
     #region Constructor ---------------------------------------------
-    public GeoWriter (Part part, string filename) => (mPart, mFilename) = (part.ReBuild (), filename);
+    public GeoWriter (Part part, string filename) {
+        (mPart, mFilename) = (part.ReBuild (), filename);
+        mBoundMin = $"{mPart.Bound.MinX:F9} {mPart.Bound.MinY:F9} 0.000000000";
+        mBoundMax = $"{mPart.Bound.MaxX:F9} {mPart.Bound.MaxY:F9} 0.000000000";
+        mCentroid = $"{mPart.Centroid.X:F9} {mPart.Centroid.Y:F9} 0.000000000";
+        mArea = $"{mPart.Area:F3}";
+    }
     #endregion
 
     #region Methods -------------------------------------------------
@@ -20,19 +26,19 @@ public class GeoWriter {
             switch (line.Trim ()) {
                 case "#~1":
                     writer.WriteLine ("#~1{0}1.03{0}1{0}{1}{0}{2}{0}{3}{0}{4}{0}1{0}0.001{0}0{0}1{0}##~~", "\r\n",
-                        $"{DateTime.Now:dd.MM.yyyy}", BoundMin, BoundMax, Area);
+                        $"{DateTime.Now:dd.MM.yyyy}", mBoundMin, mBoundMax, mArea);
                     mIsLineNeeded = false;
                     break;
                 case "#~3":
                     writer.WriteLine ("#~3{0}{0}{0}", "\r\n" + $"{0:F9} {0:F9} {1:F9}\r\n{1:F9} {0:F9} {0:F9} {0:F9}\r\n" +
                         $"{0:F9} {1:F9} {0:F9} {0:F9}\r\n{0:F9} {0:F9} {1:F9} {0:F9}\r\n{0:F9} {0:F9} {0:F9} {1:F9}" +
-                        "{1}{0}{2}{0}{3}{0}{4}{0}1{0}0{0}0{0}0{0}0{0}##~~", "\r\n", BoundMin, BoundMax, Centriod, Area);
+                        "{1}{0}{2}{0}{3}{0}{4}{0}1{0}0{0}0{0}0{0}0{0}##~~", "\r\n", mBoundMin, mBoundMax, mCentroid, mArea);
                     mIsLineNeeded = false;
                     break;
                 case "#~31": // Writes the new vertices
                     writer.WriteLine ("#~31");
-                    foreach (var vertice in mPart.Vertices)
-                        writer.WriteLine ("P{0}{1}{0}{2} {3}{0}{4}", "\r\n", vertice.Index, $"{vertice.X:F9}", $"{vertice.Y:F9} 0.000000000", "|~");
+                    foreach (var vertex in mPart.Vertices)
+                        writer.WriteLine ("P{0}{1}{0}{2} {3}{0}{4}", "\r\n", vertex.Index, $"{vertex.X:F9}", $"{vertex.Y:F9} 0.000000000", "|~");
                     writer.WriteLine ("##~~");
                     mIsLineNeeded = false;
                     break;
@@ -41,7 +47,7 @@ public class GeoWriter {
                     var idx = lines.IndexOf (line) + 1;    // Gets the index of the line from which to be copied
                     var dataLines = lines.Skip (idx).Take (4).ToArray ();  // Copies the info about the contour from the imported file
                     foreach (var dataline in dataLines) writer.WriteLine (dataline);
-                    writer.WriteLine ("{1}{0}{2}{0}{3}{0}{4}{0}0{0}##~~", "\r\n", BoundMin, BoundMax, Centriod, Area);
+                    writer.WriteLine ("{1}{0}{2}{0}{3}{0}{4}{0}0{0}##~~", "\r\n", mBoundMin, mBoundMax, mCentroid, mArea);
                     mIsLineNeeded = false;
                     break;
                 case "#~11" or "#~30" or "#~37" or "#~331" or "#~371" or "#~END" or "#~EOF":
@@ -69,19 +75,12 @@ public class GeoWriter {
     }
     #endregion
 
-    #region Properties ----------------------------------------------
-    public string BoundMin => $"{mPart.Bound.MinX:F9} {mPart.Bound.MinY:F9} 0.000000000";
-    public string BoundMax => $"{mPart.Bound.MaxX:F9} {mPart.Bound.MaxY:F9} 0.000000000";
-    public string Centriod => $"{mPart.Centroid.X:F9} {mPart.Centroid.Y:F9} 0.000000000";
-    public string Area => $"{mPart.Area:F3}";
-
-    #endregion
-
     #region Private Data --------------------------------------------
     int mBLCount;    // Holds the count of the bendlines written
-    Part mPart;       // The processed part
-    string mFilename; // Imported file's name
     bool mIsLineNeeded;  // Set to false if the line in the imported file has to be skipped
+    readonly Part mPart;       // The processed part
+    readonly string mFilename; // Imported file's name
+    readonly string mBoundMin, mBoundMax, mCentroid, mArea;
     #endregion
 }
 #endregion
