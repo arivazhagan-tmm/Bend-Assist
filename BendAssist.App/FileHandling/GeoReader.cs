@@ -8,7 +8,7 @@ public class GeoReader (string fileName) {
     #region Method --------------------------------------------------
     /// <summary>Reads the given geo file</summary>
     /// and returns a part with list of plines and bendlines.
-    public Part ParseProfile () {
+    public Part ParsePart () {
         var (vertices, pLines, bLines) = (new List<Point2> (), new List<PLine> (), new List<BendLine> ());
         using StreamReader reader = new (fileName);
         string? line;
