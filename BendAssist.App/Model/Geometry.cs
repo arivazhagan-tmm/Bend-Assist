@@ -15,14 +15,15 @@ public readonly record struct Point2 (double X = double.NaN, double Y = double.N
       return angle < 0 ? 360 + angle : angle;
    }
    public bool AreEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
+   public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
+   public Point2 Duplicate (int index) => new (X, Y, index);
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
       var pt = this;
       neighbour = neighbours.ToList ().Find (p => p.DistanceTo (pt).IsEqual (proximity));
       return neighbour.IsSet;
    }
-   public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
-   public Point2 Translated (Vector2 v) => this + v;
+   public Point2 Translate (Vector2 v) => this + v;
    #endregion
 
    #region Operators ------------------------------------------------

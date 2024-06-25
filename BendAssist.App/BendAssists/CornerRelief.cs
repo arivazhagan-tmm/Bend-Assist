@@ -5,7 +5,7 @@ namespace BendAssist.App.BendAssists;
 #region class CornerRelief ------------------------------------------------------------------------
 public sealed class CornerRelief : BendAssist {
    #region Constructors ---------------------------------------------
-   public CornerRelief (Part part) => mFreshPart = part;
+   public CornerRelief (Part part) => mPart = part;
    #endregion
 
    #region Methods --------------------------------------------------

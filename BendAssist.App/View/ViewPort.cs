@@ -37,8 +37,8 @@ internal sealed class ViewPort : Canvas {
    protected override void OnRender (DrawingContext dc) {
       dc.DrawRectangle (Background, mBGPen, mVRect);
       if (mLines is null || mLines.Count == 0) return;
-      foreach (var line in mLines) {
-
+      foreach (var l in mLines) {
+         dc.DrawLine (mPLPen, l.StartPoint.Convert (), l.EndPoint.Convert ());
       }
       base.OnRender (dc);
    }

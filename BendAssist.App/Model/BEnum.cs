@@ -1,10 +1,10 @@
 ﻿namespace BendAssist.App.Model;
 
 /// <summary>Orientation of the line</summary>
-public enum EOrientation { None, Horizontal, Vertical, Inclined }
+public enum EOrientation { None = -1, Horizontal = 0, Vertical = 1, Inclined = 2 }
 
 /// <summary>Operations assist the flawless bending process</summary>
-public enum EBendAssist { BendDeduction, BendRelief, CornerClose, CornerRelief }
+public enum EBendAssist { AddFlange, BendDeduction, BendRelief, CornerClose, CornerRelief }
 
 /// <summary>Bend deduction algorithms</summary>
 public enum EBDAlgorithm { EquallyDistributed, PartiallyDistributed }

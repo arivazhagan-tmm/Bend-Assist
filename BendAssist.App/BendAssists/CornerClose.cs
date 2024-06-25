@@ -5,7 +5,7 @@ namespace BendAssist.App.BendAssists;
 #region class CornerClose -------------------------------------------------------------------------
 public sealed class CornerClose : BendAssist {
    #region Constructors ---------------------------------------------
-   public CornerClose (Part part) => mFreshPart = part;
+   public CornerClose (Part part) => mPart = part;
    #endregion
 
    #region Methods --------------------------------------------------

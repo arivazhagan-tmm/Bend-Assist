@@ -1,7 +1,7 @@
 ﻿using static System.Math;
-using BendAssist.App.Model;
 using System.Windows;
 using System.Windows.Media;
+using BendAssist.App.Model;
 
 namespace BendAssist.App.Utils;
 
@@ -22,6 +22,7 @@ public static class BendUtils {
       return new ((minX + maxX) * 0.5, (minY + maxY) * 0.5);
    }
 
+   /// <summary>Checks if the given line present in the list or not by comparing the vertices</summary>
    public static bool HasDuplicate (this List<Line> lines, Line l) {
       foreach (var line in lines)
          if (line.StartPoint.AreEqual (l.StartPoint) && line.EndPoint.AreEqual (l.EndPoint)) return true;
@@ -37,11 +38,18 @@ public static class BendUtils {
    /// <summary>Inserts the given pline at the lines at the given index</summary>
    public static List<PLine> InsertAt (this PLine l, int index, List<PLine> lines) {
       var len = lines.Count + 1;
-      var tmp = new PLine[lines.Count + 1];
+      var tmp = new PLine[len];
+      var (ptIndex, inserted) = (0, false);
       for (int i = 0; i < len; i++) {
          var line = lines[i];
-         if (i == index) tmp[i] = new (l.StartPoint, l.EndPoint, i++);
-         tmp[i] = new (line.StartPoint, line.EndPoint, i++);
+         var (startPt, endPt) = (line.StartPoint, line.EndPoint);
+         if (i == index) {
+            tmp[i] = new (l.StartPoint.Duplicate (ptIndex), l.EndPoint.Duplicate (++ptIndex), i++);
+            inserted = true;
+         }
+         tmp[i] = !inserted ? new (startPt, endPt, i++)
+                            : new (startPt.Duplicate (ptIndex), endPt.Duplicate (++ptIndex), i++);
+         ptIndex = line.EndPoint.Index;
       }
       return [.. tmp];
    }
@@ -63,6 +71,7 @@ public static class BendUtils {
 }
 #endregion
 
+#region CommonUtils -------------------------------------------------------------------------------
 public static class CommonUtils {
    /// <summary>Checking the double values are same</summary>
    public static bool IsEqual (this double a, double b) => Abs (a - b) < 1e-6;
@@ -70,11 +79,13 @@ public static class CommonUtils {
    /// <summary>Round off the value to the given precision</summary>
    public static double Round (this double f, int precision = 2) => Math.Round (f, precision);
 
+   /// <summary>Applies transformation on point p and returns as Point2</summary>
    public static Point2 Transform (this Point p, Matrix xfm) {
       var pt = xfm.Transform (p);
       return new Point2 (pt.X, pt.Y);
    }
 
+   /// <summary>Returns a new bound by applying given transformation</summary>
    public static Bound2 Transform (this Bound2 b, Matrix xfm) {
       var (min, max) = (new Point (b.MinX, b.MinY), new Point (b.MaxX, b.MaxY));
       min = xfm.Transform (min);
@@ -82,5 +93,7 @@ public static class CommonUtils {
       return new (new (min.X, min.Y), new (max.X, max.Y));
    }
 
+   /// <summary>Converts and returns point2 to Windows.Point</summary>
    public static Point Convert (this Point2 p) => new (p.X, p.Y);
 }
+#endregion

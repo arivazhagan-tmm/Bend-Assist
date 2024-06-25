@@ -59,7 +59,7 @@ public abstract class Line : ICloneable {
 #region class PLine -------------------------------------------------------------------------------
 public sealed class PLine : Line {
    #region Constructors ---------------------------------------------
-   public PLine (Point2 startPt, Point2 endPt, int index) {
+   public PLine (Point2 startPt, Point2 endPt, int index = -1) {
       (mStartPoint, mEndPoint, mIndex) = (startPt, endPt, index);
    }
    #endregion
@@ -73,7 +73,7 @@ public sealed class BendLine : Line {
       (mStartPoint, mEndPoint, mIndex, BendDeduction, IsBendLine) = (startPt, endPt, index, bendDeduction, true);
    #endregion
 
-   #region Properties -----------------------------------------------------------------------------
+   #region Properties -----------------------------------------------
    public readonly float BendDeduction;
    #endregion
 }
