@@ -24,7 +24,7 @@ public class Part {
          plines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index));
       index = 0;
       foreach (var l in BendLines.OrderBy (l => l.Index))
-         blines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index, l.BendDeduction));
+         blines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index, l.BLInfo));
       return new Part (plines, blines);
    }
    #endregion

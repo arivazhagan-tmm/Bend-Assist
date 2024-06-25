@@ -30,7 +30,7 @@ public abstract class Line : ICloneable {
    Line GetLine (Point2 startPt, Point2 endPt, int index) {
       Line line = null!;
       if (this is PLine) line = new PLine (startPt, endPt, index);
-      else if (this is BendLine bl) line = new BendLine (startPt, endPt, index, bl.BendDeduction);
+      else if (this is BendLine bl) line = new BendLine (startPt, endPt, index, bl.BLInfo);
       return line;
    }
 
@@ -69,12 +69,16 @@ public sealed class PLine : Line {
 #region class BendLine ----------------------------------------------------------------------------
 public sealed class BendLine : Line {
    #region Constructors ---------------------------------------------
-   public BendLine (Point2 startPt, Point2 endPt, int index, float bendDeduction) =>
-      (mStartPoint, mEndPoint, mIndex, BendDeduction, IsBendLine) = (startPt, endPt, index, bendDeduction, true);
+   public BendLine (Point2 startPt, Point2 endPt, int index, BendLineInfo info) =>
+      (mStartPoint, mEndPoint, mIndex, BLInfo, IsBendLine) = (startPt, endPt, index, info, true);
    #endregion
 
    #region Properties -----------------------------------------------
-   public readonly float BendDeduction;
+   public readonly BendLineInfo BLInfo;
    #endregion
 }
+#endregion
+
+#region struct BendLineInfo ------------------------------------------------------------------------
+public readonly record struct BendLineInfo(float Angle, float Radius, float Deduction);
 #endregion
