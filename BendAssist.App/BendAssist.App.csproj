@@ -7,8 +7,4 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="FileHandling\" />
-  </ItemGroup>
 </Project>
