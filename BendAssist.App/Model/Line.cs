@@ -8,6 +8,7 @@ public abstract class Line : ICloneable {
    public bool IsBendLine { get; init; }
    public int Index { get => mIndex; init => mIndex = value; }
    public double Length { get => mLength; init => mLength = value; }
+   public double Angle { get => mAngle; init => mAngle = value; }
    public Bound2 Bound => mBound;
    public Point2 StartPoint { get => mStartPoint; init => mStartPoint = value; }
    public Point2 EndPoint { get => mEndPoint; init { mEndPoint = value; UpdateProperties (); } }

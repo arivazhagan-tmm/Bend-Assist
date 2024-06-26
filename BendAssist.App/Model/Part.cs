@@ -9,7 +9,7 @@ public class Part {
       (PLines, BendLines) = (plines, bendLines);
       Vertices = [];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
-      BendLines.ForEach (l => Vertices.Add (l.StartPoint));
+      BendLines.ForEach (l => Vertices.AddRange ([l.StartPoint, l.EndPoint]));
       Area = Vertices.Area ();
       Centroid = Vertices.Centroid ();
       Bound = new Bound2 (Vertices);
