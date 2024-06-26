@@ -22,6 +22,16 @@ public static class BendUtils {
       return new ((minX + maxX) * 0.5, (minY + maxY) * 0.5);
    }
 
+   /// <summary>Converts and returns point2 to Windows.Point</summary>
+   public static Point Convert (this Point2 p) => new (p.X, p.Y);
+
+   public static Bound2 CreateBoundAround (PLine p) {
+      var (p1, p2) = (p.StartPoint, p.EndPoint);
+      var theta = p1.AngleTo (p2);
+      var (t1, t2, offset) = (theta + 90, theta - 90, 2.0);
+      return new Bound2 ([p1.RadialMove (offset, t1), p1.RadialMove (offset, t2), p2.RadialMove (offset, t1), p2.RadialMove (offset, t2)]);
+   }
+
    /// <summary>Checks if the given line present in the list or not by comparing the vertices</summary>
    public static bool HasDuplicate (this List<Line> lines, Line l) {
       foreach (var line in lines)
@@ -68,16 +78,6 @@ public static class BendUtils {
       connectedLines.AddRange (tmp);
       return connectedLines.Count > 1;
    }
-}
-#endregion
-
-#region CommonUtils -------------------------------------------------------------------------------
-public static class CommonUtils {
-   /// <summary>Checking the double values are same</summary>
-   public static bool IsEqual (this double a, double b) => Abs (a - b) < 1e-6;
-
-   /// <summary>Round off the value to the given precision</summary>
-   public static double Round (this double f, int precision = 2) => Math.Round (f, precision);
 
    /// <summary>Applies transformation on point p and returns as Point2</summary>
    public static Point2 Transform (this Point p, Matrix xfm) {
@@ -92,8 +92,28 @@ public static class CommonUtils {
       max = xfm.Transform (max);
       return new (new (min.X, min.Y), new (max.X, max.Y));
    }
+}
+#endregion
 
-   /// <summary>Converts and returns point2 to Windows.Point</summary>
-   public static Point Convert (this Point2 p) => new (p.X, p.Y);
+#region class CommonUtils -------------------------------------------------------------------------
+public static class CommonUtils {
+   #region Methods --------------------------------------------------
+   /// <summary>Checking the double values are same</summary>
+   public static bool IsEqual (this double a, double b) => Abs (a - b) < 1e-6;
+
+   /// <summary>Round off the value to the given precision</summary>
+   public static double Round (this double f, int precision = 2) => Math.Round (f, precision);
+
+   /// <summary>Converts the given angle in degrees to radians</summary>
+   public static double ToRadians (this double theta) => theta * sFactor;
+
+   /// <summary>Converts the given angle in radians to degrees</summary>
+   public static double ToDegrees (this double theta) => theta / sFactor;
+   #endregion
+
+   #region Private Data ---------------------------------------------
+   // Factor useful for converting radians to degrees and vice versa
+   static double sFactor = Math.PI / 180;
+   #endregion
 }
 #endregion

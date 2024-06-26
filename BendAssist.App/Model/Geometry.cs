@@ -10,19 +10,33 @@ public readonly record struct Point2 (double X = double.NaN, double Y = double.N
    #endregion
 
    #region Methods --------------------------------------------------
+   /// <summary>Angle made with given P in degrees</summary>
    public double AngleTo (Point2 p) {
       var angle = Round (Atan2 (p.Y - Y, p.X - X) * (180 / PI), 2);
       return angle < 0 ? 360 + angle : angle;
    }
+   /// <summary>Checks given point is a duplicate</summary>
    public bool AreEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
+   /// <summary>Distance from given point p</summary>
    public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
+   /// <summary>Copy of the point with custom index</summary>
    public Point2 Duplicate (int index) => new (X, Y, index);
+   /// <summary>Nearest neighbourhood point within given proximity</summary>
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
+      neighbour = new Point2 ();
+      if (neighbours is null || neighbours.Count () is 0) return false;
       var pt = this;
       neighbour = neighbours.ToList ().Find (p => p.DistanceTo (pt).IsEqual (proximity));
       return neighbour.IsSet;
    }
+   /// <summary>Radially moves the point to distance at theta in degrees</summary>
+   public Point2 RadialMove (double distance, double theta) {
+      theta = theta.ToRadians ();
+      return new Point2 (X + distance * Cos (theta), Y + distance * Sin (theta));
+   }
+   /// <summary></summary>
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
+   /// <summary>Translation with dx and dy from the vector v</summary>
    public Point2 Translate (Vector2 v) => this + v;
    #endregion
 

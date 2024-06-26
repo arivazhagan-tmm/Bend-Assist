@@ -1,4 +1,6 @@
-﻿namespace BendAssist.App.Model;
+﻿using BendAssist.App.Utils;
+
+namespace BendAssist.App.Model;
 
 #region class Line --------------------------------------------------------------------------------
 public abstract class Line : ICloneable {
@@ -6,6 +8,7 @@ public abstract class Line : ICloneable {
    public bool IsBendLine { get; init; }
    public int Index { get => mIndex; init => mIndex = value; }
    public double Length { get => mLength; init => mLength = value; }
+   public Bound2 Bound => mBound;
    public Point2 StartPoint { get => mStartPoint; init => mStartPoint = value; }
    public Point2 EndPoint { get => mEndPoint; init { mEndPoint = value; UpdateProperties (); } }
    public EOrientation Orientation { get => mOrientation; init => mOrientation = value; }
@@ -14,12 +17,12 @@ public abstract class Line : ICloneable {
    #region Methods --------------------------------------------------
    public object Clone () => GetLine (mStartPoint, mEndPoint, mIndex);
    public override string? ToString () => $"{mStartPoint}, {mEndPoint}, [{Index}]";
-   public Line Translated (double dx, double dy) {
+   public virtual Line Translated (double dx, double dy) {
       var v = new Vector2 (dx, dy);
       var (startPt, endPt) = (mStartPoint + v, mEndPoint + v);
       return GetLine (startPt, endPt, mIndex);
    }
-   public Line Trimmed (double startDx, double startDy, double endDx, double endDy) {
+   public virtual Line Trimmed (double startDx, double startDy, double endDx, double endDy) {
       var (startPt, endPt) = (new Point2 (mStartPoint.X + startDx, mStartPoint.Y + startDy, mStartPoint.Index),
                               new Point2 (mEndPoint.X + endDx, mEndPoint.Y + endDy, mEndPoint.Index));
       return GetLine (startPt, endPt, mIndex);
@@ -51,6 +54,7 @@ public abstract class Line : ICloneable {
    protected int mIndex;
    protected double mAngle, mLength;
    protected EOrientation mOrientation;
+   protected Bound2 mBound;
    protected Point2 mStartPoint, mEndPoint;
    #endregion
 }
@@ -61,6 +65,7 @@ public sealed class PLine : Line {
    #region Constructors ---------------------------------------------
    public PLine (Point2 startPt, Point2 endPt, int index = -1) {
       (mStartPoint, mEndPoint, mIndex) = (startPt, endPt, index);
+      mBound = BendUtils.CreateBoundAround (this);
    }
    #endregion
 }
@@ -79,6 +84,6 @@ public sealed class BendLine : Line {
 }
 #endregion
 
-#region struct BendLineInfo ------------------------------------------------------------------------
-public readonly record struct BendLineInfo(float Angle, float Radius, float Deduction);
+#region struct BendLineInfo -----------------------------------------------------------------------
+public readonly record struct BendLineInfo (float Angle, float Radius, float Deduction);
 #endregion

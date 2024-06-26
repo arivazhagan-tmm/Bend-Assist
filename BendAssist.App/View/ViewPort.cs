@@ -8,16 +8,19 @@ using BendAssist.App.Utils;
 namespace BendAssist.App.View;
 
 #region class Viewport ----------------------------------------------------------------------------
-internal sealed class ViewPort : Canvas {
+internal sealed class Viewport : Canvas {
    #region Constructors ---------------------------------------------
-   public ViewPort () => Loaded += OnLoaded;
+   public Viewport () => Loaded += OnLoaded;
    #endregion
 
    #region Properties -----------------------------------------------
    #endregion
 
    #region Methods --------------------------------------------------
+   public void Clear () => mLines?.Clear ();
+
    public void UpdateViewport (Part part) {
+      mPart = part;
       if (part is null || part.PLines is null || part.BendLines is null) return;
       mLines ??= [];
       if (part is ProcessedPart pr) {
@@ -26,6 +29,8 @@ internal sealed class ViewPort : Canvas {
          mLines.AddRange (part.PLines.Where (pl => !mLines.HasDuplicate (pl)));
          mLines.AddRange (part.BendLines.Where (pl => !mLines.HasDuplicate (pl)));
       }
+      UpdateBound ();
+      ZoomExtents ();
    }
 
    /// <summary>Zooms the entity extents and fit them to the current viewport size</summary>
@@ -35,12 +40,14 @@ internal sealed class ViewPort : Canvas {
    }
 
    protected override void OnRender (DrawingContext dc) {
-      dc.DrawRectangle (Background, mBGPen, mVRect);
+      dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
       if (mLines is null || mLines.Count == 0) return;
       foreach (var l in mLines) {
-         dc.DrawLine (mPLPen, l.StartPoint.Convert (), l.EndPoint.Convert ());
+         var pen = l is PLine ? mPLPen : mBLPen;
+         dc.DrawLine (pen, Transform (l.StartPoint), Transform (l.EndPoint));
       }
       base.OnRender (dc);
+      Point Transform (Point2 pt) => mPXfm.Transform (pt.Convert ());
    }
    #endregion
 
@@ -56,7 +63,8 @@ internal sealed class ViewPort : Canvas {
    // Initializes the rendering objects and attaches the mouse events
    void OnLoaded (object sender, RoutedEventArgs e) {
       #region Initializing members --------------
-      mMargin = 10.0;
+      Background = Brushes.Transparent;
+      mMargin = 25.0;
       mSnapSource = [];
       mBGPen = new (Brushes.Gray, 0.5);
       mBLPen = new (Brushes.ForestGreen, 2.0) { DashStyle = DashStyles.Dash };
@@ -74,14 +82,19 @@ internal sealed class ViewPort : Canvas {
       MouseWheel += OnMouseWheel;
       SizeChanged += (s, e) => ZoomExtents ();
       #endregion
+
+      var menu = new ContextMenu ();
+      var zoomExtnd = new MenuItem () { Header = "Zoom Extents" };
+      zoomExtnd.Click += (s, e) => ZoomExtents ();
+      menu.Items.Add (zoomExtnd);
+      ContextMenu = menu;
    }
 
    // Udpates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
-      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
+      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt))
          mSnapPt = mMousePt = pt;
-      }
       InvalidateVisual ();
    }
 
@@ -97,7 +110,7 @@ internal sealed class ViewPort : Canvas {
    void UpdateBound () {
       List<Point2> boundPts = mPart != null ? mPart.Vertices : [];
       if (mProcessedPart != null) boundPts.AddRange (mProcessedPart.Vertices);
-      UpdatePXfm (new Bound2 (boundPts));
+      if (boundPts.Count > 2) UpdatePXfm (new Bound2 (boundPts));
    }
 
    // Updates the projection transform matrix to zoom fits the entities in the viewport

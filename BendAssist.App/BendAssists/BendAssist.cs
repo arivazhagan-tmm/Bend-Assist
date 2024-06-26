@@ -5,7 +5,9 @@ namespace BendAssist.App.BendAssists;
 #region class BendAssist --------------------------------------------------------------------------
 public abstract class BendAssist {
    #region Properties -----------------------------------------------
-   public string? AssitError => mAssistError;
+   /// <summary>Instructions to be shown to the user</summary>
+   public virtual string[] Prompts => mPrompts ??= [];
+   public string? AssistError => mAssistError;
    public Part? Part { get => mPart; init => mPart = value; }
    public ProcessedPart? ProcessedPart { get => mProcessedPart; init => mProcessedPart = value; }
    #endregion
@@ -25,6 +27,7 @@ public abstract class BendAssist {
    #region Private Data ---------------------------------------------
    protected bool mCanAssist;
    protected string? mAssistError;
+   protected string[]? mPrompts;
    protected Point2 mSelectedPoint; // Point selected by user on UI
    protected Line? mSelectedLine;
    protected BendLine? mSelectedBendLine;
