@@ -8,6 +8,7 @@ public sealed class MakeFlange : BendAssist {
     #region Constructors --------------------------------------------
     public MakeFlange (Part part, PLine pline, float angle, double height, float radius) =>
         (mPart, mPline, mBendAngle, mHeight, mRadius) = (part, pline, angle, height, radius);
+    public MakeFlange (Part part) { }
     #endregion
 
     #region Methods -------------------------------------------------

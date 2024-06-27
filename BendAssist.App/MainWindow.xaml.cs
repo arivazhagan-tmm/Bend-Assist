@@ -86,11 +86,7 @@ public partial class MainWindow : Window {
                 var fileName = dlg.FileName;
                 var part = reader.ParsePart ();
                 mViewport?.Clear ();
-                var mkf = new MakeFlange (part, new PLine (new Point2 (100, 0,3), new Point2 (100, 100,4), 2), 90, 10, 2);
                 mViewport?.UpdateViewport (part);
-                mkf.Execute ();
-                mViewport?.Clear ();
-                mViewport?.UpdateViewport (mkf.ProcessedPart!);
                 // Info of the part
                 string[] infobox = ["File Name : ", "Sheet Size : ", "BendLines : "];
                 string[] infoboxvalue = [$"{Path.GetFileNameWithoutExtension (fileName)}{Path.GetExtension (fileName)}",
