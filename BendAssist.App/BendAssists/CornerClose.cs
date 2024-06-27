@@ -22,9 +22,9 @@ public sealed class CornerClose : BendAssist {
       if (commonVertices.Count < 1) return;
       else {
          var (angle, kFactor, thickness, radius) = (90, 0.38, 2, 2);
-         var halfBA = GetBendAllowance (angle, kFactor, thickness, radius) / 2;
+         var halfBA = BendUtils.GetBendAllowance (angle, kFactor, thickness, radius) / 2;
          var lineShift = halfBA - radius;
-         var halfBD = GetBendDeduction (angle, kFactor, thickness, radius) / 2;
+         var halfBD = BendUtils.GetBendDeduction (angle, kFactor, thickness, radius) / 2;
          foreach (var pLine in pLines)
             if (commonVertices.Any (pLine.HasVertex)) mStepLines.Add (pLine);
             else mEdgeLines.Add (pLine);
@@ -83,20 +83,6 @@ public sealed class CornerClose : BendAssist {
          mProcessedPart = new ProcessedPart (mNewLines, mPart.BendLines, 2, EBendAssist.CornerClose);
       }
    }
-   #endregion
-
-   // This region is to be implemented in Utils.cs
-   #region UtilsImplementation -------------------------------------------
-   public static double GetBendDeduction (double angle, double kFactor, double thickness, double radius) {
-      angle = angle.ToRadians ();
-      var totalSetBack = 2 * ((radius + thickness) * Math.Tan (angle / 2));
-      var bendAllowance = angle * (kFactor * thickness + radius);
-      return double.Round (Math.Abs (totalSetBack - bendAllowance), 3);
-   }
-
-   public static double GetBendAllowance (double angle, double kFactor, double thickness, double radius)
-      => angle.ToRadians () * (kFactor * thickness + radius);
-
    #endregion
 
    #region Private Data ---------------------------------------------
