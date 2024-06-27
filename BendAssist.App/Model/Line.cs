@@ -38,7 +38,7 @@ public abstract class Line : ICloneable {
       return line;
    }
 
-   void UpdateProperties () {
+   protected void UpdateProperties () {
       if (mStartPoint.IsSet && mEndPoint.IsSet) {
          mAngle = mStartPoint.AngleTo (mEndPoint);
          mOrientation = mAngle switch {
@@ -67,6 +67,7 @@ public sealed class PLine : Line {
    public PLine (Point2 startPt, Point2 endPt, int index = -1) {
       (mStartPoint, mEndPoint, mIndex) = (startPt, endPt, index);
       mBound = BendUtils.CreateBoundAround (this);
+      UpdateProperties ();
    }
    #endregion
 }
@@ -75,8 +76,10 @@ public sealed class PLine : Line {
 #region class BendLine ----------------------------------------------------------------------------
 public sealed class BendLine : Line {
    #region Constructors ---------------------------------------------
-   public BendLine (Point2 startPt, Point2 endPt, int index, BendLineInfo info) =>
+   public BendLine (Point2 startPt, Point2 endPt, int index, BendLineInfo info) {
       (mStartPoint, mEndPoint, mIndex, BLInfo, IsBendLine) = (startPt, endPt, index, info, true);
+      UpdateProperties();
+   }
    #endregion
 
    #region Properties -----------------------------------------------
