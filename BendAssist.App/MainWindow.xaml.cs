@@ -126,29 +126,31 @@ public partial class MainWindow : Window {
         mMainPanel.Content = dp;
         Background = Brushes.WhiteSmoke;
     }
-    void OnOptionClicked (object sender, RoutedEventArgs e) { // Handle the button events
+
+    // Handles the button click events
+    void OnOptionClicked (object sender, RoutedEventArgs e) {
         if (sender is not Button btn || mViewport is null) return;
         if (!Enum.TryParse ($"{btn.Tag}", out EBendAssist opt)) return;
         switch (opt) {
             case EBendAssist.BendDeduction:
-                mCurrentprocess = new BendDeduction (mPart, EBDAlgorithm.EquallyDistributed);
+                mBendAssist = new BendDeduction (mPart, EBDAlgorithm.EquallyDistributed);
                 break;
             case EBendAssist.BendRelief:
-                mCurrentprocess = new BendRelief (mPart);
+                mBendAssist = new BendRelief (mPart);
                 break;
             case EBendAssist.CornerClose:
-                mCurrentprocess = new CornerClose (mPart);
+                mBendAssist = new CornerClose (mPart);
                 break;
             case EBendAssist.CornerRelief:
-                mCurrentprocess = new CornerRelief (mPart);
+                mBendAssist = new CornerRelief (mPart);
                 break;
             case EBendAssist.AddFlange:
-                mCurrentprocess = new MakeFlange (mPart);
+                mBendAssist = new MakeFlange (mPart);
                 break;
         }
-        mCurrentprocess.Execute ();
-        if (mCurrentprocess.ProcessedPart != null) {
-            mViewport.UpdateViewport (mCurrentprocess.ProcessedPart);
+        mBendAssist.Execute ();
+        if (mBendAssist.ProcessedPart != null) {
+            mViewport.UpdateViewport (mBendAssist.ProcessedPart); // Displays the processed part
             mViewport.ZoomExtents ();
         }
     }
@@ -157,6 +159,6 @@ public partial class MainWindow : Window {
     #region Private Data ---------------------------------------------
     Viewport? mViewport;
     Part mPart;
-    BendAssists.BendAssist mCurrentprocess; // Current bend assist process being applied
+    BendAssists.BendAssist mBendAssist; // Current bend assist process
     #endregion
 }
