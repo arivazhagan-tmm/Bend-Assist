@@ -24,7 +24,8 @@ internal sealed class Viewport : Canvas {
         if (part is null || part.PLines is null || part.BendLines is null) return;
         mLines ??= [];
         if (part is ProcessedPart pr) {
-
+            mLines.AddRange (pr.PLines.Where (pl => !mLines.HasDuplicate (pl)));
+            mLines.AddRange (pr.BendLines.Where (pl => !mLines.HasDuplicate (pl)));
         } else {
             mLines.AddRange (part.PLines.Where (pl => !mLines.HasDuplicate (pl)));
             mLines.AddRange (part.BendLines.Where (pl => !mLines.HasDuplicate (pl)));
