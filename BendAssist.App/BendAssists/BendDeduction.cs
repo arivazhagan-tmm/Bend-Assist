@@ -1,9 +1,7 @@
 ﻿using BendAssist.App.Model;
 using BendAssist.App.Utils;
-using System.Linq;
-using System.Windows;
 using static BendAssist.App.Model.EOrientation;
-using static BendAssist.App.BendAssists.EPCoord;
+using static BendAssist.App.Model.EPCoord;
 
 namespace BendAssist.App.BendAssists;
 
@@ -56,7 +54,9 @@ public sealed class BendDeduction : BendAssist {
       }
       mProcessedPart = new ProcessedPart (newPLines, newBendLines, 0, EBendAssist.BendDeduction);
    }
+   #endregion
 
+   #region Implementation -------------------------------------------
    /// <summary>Applies bend deduction for the bend lines and the edges equally on both sides of the bend lines</summary>
    // newBLines - Collection of bend deducted bend lines, bLines - Bend lines which are to be bend deducted.
    // tempPLines - Temporary collection of perpendicular pLines which have to be trimmed from the other side.
@@ -73,13 +73,13 @@ public sealed class BendDeduction : BendAssist {
          newPLines.Add ((PLine)pLine.Translated (dx, dy)); // Parallel pLines
          switch (blLoc) {
             case ELoc.Top:
-               foreach (var idx in GetCPIndices (pLine, mPart.PLines)) { // Trims the connected perpendicular edges
+               foreach (var idx in BendUtils.GetCPIndices (pLine, mPart.PLines)) { // Trims the connected perpendicular edges
                   var conPLine = mPart.PLines.Where (cPLine => cPLine.Index == idx).First ();
                   tempPLines.Add ((PLine)TrimLine (pLOrient is Horizontal ? Y : X, -1, conPLine, pLine, totalBD));
                }
                break;
             case ELoc.Bottom:
-               foreach (var idx in GetCPIndices (pLine, mPart.PLines)) {
+               foreach (var idx in BendUtils.GetCPIndices (pLine, mPart.PLines)) {
                   PLine conPLine;
                   if (tempPLines.Any (tPLine => tPLine.Index == idx)) // checks whether the edge is trimmed from the other side or not
                      conPLine = tempPLines.Where (tPLine => tPLine.Index == idx).First ();
@@ -94,25 +94,6 @@ public sealed class BendDeduction : BendAssist {
       }
    }
 
-   // To be moved to Utils.cs
-   /// <summary>Returns the array of indices of the connected pLines from the given pLine</summary>
-   static int[] GetCPIndices (PLine refPLine, List<PLine> pLines) {
-      var (start, end) = (refPLine.StartPoint, refPLine.EndPoint);
-      return pLines.Where (c => c.Index != refPLine.Index && (c.HasVertex (start) || c.HasVertex (end))).Select (c => c.Index).ToArray ();
-   }
-
-   /// <summary>Trims the given line according to the parameters given and returns the trimmed line</summary>
-   Line TrimLine (EPCoord coOrdinate, int offFactor, Line trimLine, Line refLine, double offset) {
-      return coOrdinate switch {
-         X => trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (0, 0, offFactor * offset, 0)
-                                                           : trimLine.Trimmed (offFactor * offset, 0, 0, 0),
-         _ => trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, offFactor * offset)
-                                                           : trimLine.Trimmed (0, offFactor * offset, 0, 0),
-      };
-   }
-   #endregion
-
-   #region Implementation -------------------------------------------
    /// <summary>Returns the list of bend lines after translating them</summary>
    // Each bendLine is moved towards the base by a sum of half of its bend deduction and 
    // the total of the bend deduction of all the inner bendLines
@@ -153,17 +134,20 @@ public sealed class BendDeduction : BendAssist {
       }
       return alignedPLines;
    }
+
+   /// <summary>Trims the given line according to the parameters given and returns the trimmed line</summary>
+   Line TrimLine (EPCoord coOrdinate, int offFactor, Line trimLine, Line refLine, double offset) {
+      return coOrdinate switch {
+         X => trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (0, 0, offFactor * offset, 0)
+                                                           : trimLine.Trimmed (offFactor * offset, 0, 0, 0),
+         _ => trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, offFactor * offset)
+                                                           : trimLine.Trimmed (0, offFactor * offset, 0, 0),
+      };
+   }
    #endregion
 
    #region Private Data ---------------------------------------------
    readonly EBDAlgorithm mAlgorithm; // Algorithm by which bend deduction is applied
    #endregion
 }
-#endregion
-
-// TO be moved to Model - BEnum.cs
-#region Enums -------------------------------------------------------------------------------------
-public enum ELoc { Bottom, Left, Right, Top }
-
-public enum EPCoord { X, Y }
 #endregion
