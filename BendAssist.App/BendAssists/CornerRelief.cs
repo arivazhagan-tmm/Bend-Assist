@@ -1,11 +1,15 @@
 ﻿using BendAssist.App.Model;
+using BendAssist.App.Utils;
 
 namespace BendAssist.App.BendAssists;
 
 #region class CornerRelief ------------------------------------------------------------------------
 public sealed class CornerRelief : BendAssist {
    #region Constructors ---------------------------------------------
-   public CornerRelief (Part part) => mPart = part;
+   public CornerRelief (Part part) {
+      mPart = part;
+      mBendAllowance = 4.335; // Material 1.0038 with a bend radius value is 2.
+   }
    #endregion
 
    #region Methods --------------------------------------------------
@@ -15,29 +19,32 @@ public sealed class CornerRelief : BendAssist {
 
    public override void Execute () {
       if (mPart is null) return;
+      List<Point2> commonBendPoints = [], // Intersect points between the two bend lines.
+      pLinesStartPts = [], // All starting points of the PLines.
+      pLinesEndPts = []; // All ending points of the PLines.
       if (mPart.BendLines.Count >= 2) {
          for (int i = 0; i < mPart.BendLines.Count - 1; i++) {
-            var start = GetCommonBendPoints (mPart.BendLines[i].StartPoint, i);
-            if (start.repeatedPoints > 0) mCommonBendPoints.Add (start.cPoint);
-            var end = GetCommonBendPoints (mPart.BendLines[i].EndPoint, i);
-            if (end.repeatedPoints > 0) mCommonBendPoints.Add (end.cPoint);
+            var (repeatedPoint1, cPoint1) = GetCommonBendPoints (mPart.BendLines[i].StartPoint, i);
+            if (repeatedPoint1 > 0) commonBendPoints.Add (cPoint1);
+            var (repeatedPoint2, cPoint2) = GetCommonBendPoints (mPart.BendLines[i].EndPoint, i);
+            if (repeatedPoint2 > 0) commonBendPoints.Add (cPoint2);
          }
       }
-      if (mCommonBendPoints.Count == 0) {
+      if (commonBendPoints.Count == 0) {
          mProcessedPart = new (mPart.PLines, mPart.BendLines, 2, EBendAssist.CornerRelief);
          mCanAssist = false;
          return;
       }
       if (mPart.PLines.Count > 0) {
          foreach (var point in mPart.PLines) {
-            mPlinesStartPts.Add (point.StartPoint);
-            mPlinesEndPts.Add (point.EndPoint);
+            pLinesStartPts.Add (point.StartPoint);
+            pLinesEndPts.Add (point.EndPoint);
          }
-         for (int i = 0; i < mCommonBendPoints.Count; i++) {
-            if (mPlinesStartPts.Contains (mCommonBendPoints[i]))
-               mCommonBendAndPlinesPts.Add (mCommonBendPoints[i]);
-            else if (mPlinesEndPts.Contains (mCommonBendPoints[i]))
-               mCommonBendAndPlinesPts.Add (mCommonBendPoints[i]);
+         for (int i = 0; i < commonBendPoints.Count; i++) {
+            if (pLinesStartPts.Contains (commonBendPoints[i]))
+               mCommonBendAndPlinesPts.Add (commonBendPoints[i]);
+            else if (pLinesEndPts.Contains (commonBendPoints[i]))
+               mCommonBendAndPlinesPts.Add (commonBendPoints[i]);
          }
       }
       UpdatedVertices ();
@@ -47,11 +54,11 @@ public sealed class CornerRelief : BendAssist {
 
    #region Implementation -------------------------------------------
    /// <summary>Get a common point bewteen the two bend lines</summary>
-   (int repeatedPoints, Point2 cPoint) GetCommonBendPoints (Point2 point, int index) {
+   (int, Point2) GetCommonBendPoints (Point2 point, int index) {
       List<Point2> tempPoint = [];
       while (++index < mPart!.BendLines.Count) {
-         if (point == mPart.BendLines[index].StartPoint) tempPoint.Add (point);
-         if (point == mPart.BendLines[index].EndPoint) tempPoint.Add (point);
+         if (point.AreEqual (mPart.BendLines[index].StartPoint)) tempPoint.Add (point);
+         if (point.AreEqual (mPart.BendLines[index].EndPoint)) tempPoint.Add (point);
       }
       return (tempPoint.Count, tempPoint.FirstOrDefault ());
    }
@@ -59,14 +66,13 @@ public sealed class CornerRelief : BendAssist {
    /// <summary>New 45 degree points for common intersect points between each two plines and bend lines</summary>
    List<Point2> UpdatedVertices () {
       Dictionary<Point2, List<Point2>> commonPointAndBendLines = [];
-      mBendAllowance = 4.335; // Material 1.0038 with a bend radius value is 2.
       for (int i = 0; i < mCommonBendAndPlinesPts.Count; i++) {
-         List<Point2> tempBPoint = [];
+         List<Point2> tempPoint = [];
          foreach (var pLine in mPart!.BendLines) {
-            if (pLine.StartPoint == mCommonBendAndPlinesPts[i]) tempBPoint.Add (pLine.EndPoint);
-            if (pLine.EndPoint == mCommonBendAndPlinesPts[i]) tempBPoint.Add (pLine.StartPoint);
+            if (pLine.StartPoint.AreEqual (mCommonBendAndPlinesPts[i])) tempPoint.Add (pLine.EndPoint);
+            if (pLine.EndPoint.AreEqual (mCommonBendAndPlinesPts[i])) tempPoint.Add (pLine.StartPoint);
          }
-         commonPointAndBendLines.Add (mCommonBendAndPlinesPts[i], tempBPoint);
+         commonPointAndBendLines.Add (mCommonBendAndPlinesPts[i], tempPoint);
       }
       for (int i = 0; i < mCommonBendAndPlinesPts.Count; i++) {
          List<Point2> bendLinePoints = commonPointAndBendLines[mCommonBendAndPlinesPts[i]];
@@ -87,8 +93,8 @@ public sealed class CornerRelief : BendAssist {
       List<int> changingIndex = [];
       foreach (var pLine in mPart!.PLines) {
          for (int i = 0; i < mCommonBendAndPlinesPts.Count; i++) {
-            if (pLine.StartPoint == mCommonBendAndPlinesPts[i]) changingIndex.Add (pLine.Index);
-            else if (pLine.EndPoint == mCommonBendAndPlinesPts[i]) changingIndex.Add (pLine.Index);
+            if (pLine.StartPoint.AreEqual (mCommonBendAndPlinesPts[i])) changingIndex.Add (pLine.Index);
+            else if (pLine.EndPoint.AreEqual (mCommonBendAndPlinesPts[i])) changingIndex.Add (pLine.Index);
          }
       }
       int len = mPart.PLines.Count + (mNew45DegVertices.Count * 2);
@@ -104,7 +110,7 @@ public sealed class CornerRelief : BendAssist {
             int choose = 0;
             List<Point2> tempPoint = [];
             foreach (var point in mCommonBendAndPlinesPts) {
-               if (mPart.PLines[i - 1].StartPoint == point || mPart.PLines[i - 1].EndPoint == point) {
+               if (mPart.PLines[i - 1].StartPoint.AreEqual (point) || mPart.PLines[i - 1].EndPoint.AreEqual (point)) {
                   tempPoint = GetPLines (mPart.PLines[i - 1], mPart.PLines[i], point, mNew45DegVertices[choose]);
                   break;
                }
@@ -131,19 +137,16 @@ public sealed class CornerRelief : BendAssist {
 
    /// <summary>Get a new point</summary>
    static Point2 GetPoint (double px, double py, double cx, double cy, double bendAllowance) {
-      if (cx == px && cy > py) return new Point2 (cx, cy - bendAllowance / 2);
-      else if (cx == px && cy < py) return new Point2 (cx, cy + bendAllowance / 2);
-      else if (cy == py && cx > px) return new Point2 (cx - bendAllowance / 2, cy);
-      else if (cy == py && cx < px) return new Point2 (cx + bendAllowance / 2, cy);
+      if (cx.IsEqual (px) && cy > py) return new Point2 (cx, cy - bendAllowance / 2);
+      else if (cx.IsEqual (px) && cy < py) return new Point2 (cx, cy + bendAllowance / 2);
+      else if (cy.IsEqual (py) && cx > px) return new Point2 (cx - bendAllowance / 2, cy);
+      else if (cy.IsEqual (py) && cx < px) return new Point2 (cx + bendAllowance / 2, cy);
       return new Point2 ();
    }
    #endregion
 
    #region Private Data ---------------------------------------------
-   List<Point2> mCommonBendPoints = [], // Intersect points between the two bend lines.
-      mPlinesStartPts = [], // All starting points of the PLines.
-      mPlinesEndPts = [], // All ending points of the PLines.
-      mCommonBendAndPlinesPts = [], // Common intersect points between the two bend lines and plines.
+   List<Point2> mCommonBendAndPlinesPts = [], // Common intersect points between the two bend lines and plines.
       mNew45DegVertices = []; // New 45 degree points.
    double mBendAllowance; // Bend Allowance value.
    #endregion
