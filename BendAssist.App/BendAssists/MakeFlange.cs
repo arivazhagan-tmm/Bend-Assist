@@ -49,7 +49,7 @@ public sealed class MakeFlange : BendAssist {
     #region Private Data --------------------------------------------
     float mBendAngle;
     double mHeight;
-    readonly PLine mPline;    // Selected pline
+    readonly PLine? mPline;    // Selected pline
     readonly float mRadius;    // Bend radius
     #endregion
 }
