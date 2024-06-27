@@ -32,6 +32,16 @@ public static class BendUtils {
       return new Bound2 ([p1.RadialMove (offset, t1), p1.RadialMove (offset, t2), p2.RadialMove (offset, t1), p2.RadialMove (offset, t2)]);
    }
 
+   public static double GetBendDeduction (double angle, double kFactor, double thickness, double radius) {
+      angle = angle.ToRadians ();
+      var totalSetBack = 2 * ((radius + thickness) * Math.Tan (angle / 2));
+      var bendAllowance = angle * (kFactor * thickness + radius);
+      return double.Round (Abs (totalSetBack - bendAllowance), 3);
+   }
+
+   public static double GetBendAllowance (double angle, double kFactor, double thickness, double radius)
+      => angle.ToRadians () * (kFactor * thickness + radius);
+
    /// <summary>Checks if the given line present in the list or not by comparing the vertices</summary>
    public static bool HasDuplicate (this List<Line> lines, Line l) {
       foreach (var line in lines)
