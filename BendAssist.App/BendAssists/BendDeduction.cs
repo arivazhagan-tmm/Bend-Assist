@@ -41,7 +41,7 @@ public sealed class BendDeduction : BendAssist {
          var blCount = bendLines!.Count;
          // The area between the two innermost bend lines is considered the base.
          var bottomBLines = bendLines.Take (blCount / 2).Reverse ().ToList (); // Bend lines on the bottom and left side of the base
-         var topBLines = bendLines.TakeLast (blCount - bottomBLines.Count).ToList (); // Bend lines on the top and right side of the base
+         var topBLines = bendLines.TakeLast (blCount - bottomBLines.Count).Reverse ().ToList (); // Bend lines on the top and right side of the base
          var tempPLines = new List<PLine> ();
          // Applies bend deduction from the top and right side of the part
          ApplyEqDistributedBD (ref newBendLines, topBLines, ref tempPLines, ref newPLines, ELoc.Top);
@@ -75,7 +75,7 @@ public sealed class BendDeduction : BendAssist {
             case ELoc.Top:
                foreach (var idx in BendUtils.GetCPIndices (pLine, mPart.PLines)) { // Trims the connected perpendicular edges
                   var conPLine = mPart.PLines.Where (cPLine => cPLine.Index == idx).First ();
-                  tempPLines.Add ((PLine)TrimLine (pLOrient is Horizontal ? Y : X, -1, conPLine, pLine, totalBD));
+                  tempPLines.Add ((PLine)TrimLine (pLOrient is Horizontal ? Y : X, conPLine, pLine, totalBD, true));
                }
                break;
             case ELoc.Bottom:
@@ -87,7 +87,7 @@ public sealed class BendDeduction : BendAssist {
                      conPLine = mPart.PLines.Where (newPLine => newPLine.Index == idx).First (); // in case of new edges to be trimmed
                      foreach (var tPLine in tempPLines) newPLines.Add (tPLine);
                   }
-                  newPLines.Add ((PLine)TrimLine (pLOrient is Horizontal ? Y : X, 1, conPLine, pLine, totalBD));
+                  newPLines.Add ((PLine)TrimLine (pLOrient is Horizontal ? Y : X, conPLine, pLine, totalBD));
                }
                break;
          }
@@ -106,8 +106,8 @@ public sealed class BendDeduction : BendAssist {
          var (bd, orient) = (bl.BLInfo.Deduction, bl.Orientation);
          var offset = offFactor * (totalBD + 0.5 * bd);
          (double dx, double dy) = (0.0, 0.0);
-         if (orient is Horizontal) (hBLCount, dy) = (hBLCount++, offset);
-         else if (orient is Vertical) (dx, vBLCount) = (offset, vBLCount++);
+         if (orient is Horizontal) (hBLCount, dy) = (hBLCount + 1, offset);
+         else if (orient is Vertical) (dx, vBLCount) = (offset, vBLCount + 1);
          totalBD += bd;
          newBendLines.Add ((BendLine)bl.Translated (dx, dy));
       }
@@ -136,12 +136,16 @@ public sealed class BendDeduction : BendAssist {
    }
 
    /// <summary>Trims the given line according to the parameters given and returns the trimmed line</summary>
-   Line TrimLine (EPCoord coOrdinate, int offFactor, Line trimLine, Line refLine, double offset) {
+   Line TrimLine (EPCoord coOrdinate, Line trimLine, Line refLine, double offset, bool lessThan = false) {
       return coOrdinate switch {
-         X => trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (0, 0, offFactor * offset, 0)
-                                                           : trimLine.Trimmed (offFactor * offset, 0, 0, 0),
-         _ => trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, offFactor * offset)
-                                                           : trimLine.Trimmed (0, offFactor * offset, 0, 0),
+         X => lessThan == true ? trimLine.StartPoint.X < refLine.StartPoint.X ? trimLine.Trimmed (0, 0, -offset, 0)
+                                                                              : trimLine.Trimmed (-offset, 0, 0, 0)
+                               : trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (0, 0, offset, 0)
+                                                                              : trimLine.Trimmed (offset, 0, 0, 0),
+         _ => lessThan == true ? trimLine.StartPoint.Y < refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, -offset)
+                                                                              : trimLine.Trimmed (0, -offset, 0, 0)
+                               : trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, offset)
+                                                                              : trimLine.Trimmed (0, offset, 0, 0)
       };
    }
    #endregion
