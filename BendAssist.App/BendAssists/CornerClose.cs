@@ -17,16 +17,16 @@ public sealed class CornerClose : BendAssist {
 
    /// <summary>Checks if a part is eligible for corner closing and gives the corner closed part</summary>
    public override void Execute () {
-      base.Execute ();
-      var vertices = mPart!.Vertices; var pLines = mPart.PLines;
+      var (vertices, pLines) = (mPart!.Vertices, mPart.PLines);
       var commonVertices = vertices.GroupBy (p => p).Where (p => p.Count () > 2).Select (g => g.Key).ToList (); // To find the intersecting points of bendlines with stepcut 
-      if (commonVertices.Count < 1) mProcessedPart = null;
+      if (commonVertices.Count < 1) return;
       else {
-         var halfBA = GetBendAllowance (90, 0.38, 2, 2) / 2;
-         var lineShift = halfBA - 2;
-         var halfBD = GetBendDeduction (90, 0.38, 2, 2) / 2;
+         var (angle, kFactor, thickness, radius) = (90, 0.38, 2, 2);
+         var halfBA = GetBendAllowance (angle, kFactor, thickness, radius) / 2;
+         var lineShift = halfBA - radius;
+         var halfBD = GetBendDeduction (angle, kFactor, thickness, radius) / 2;
          foreach (var pLine in pLines)
-            if (commonVertices.Contains (pLine.StartPoint) || commonVertices.Contains (pLine.EndPoint)) mStepLines.Add (pLine);
+            if (commonVertices.Any (pLine.HasVertex)) mStepLines.Add (pLine);
             else mEdgeLines.Add (pLine);
          foreach (var stepLine in mStepLines) {
             mStepStartPts.Add (stepLine.StartPoint);
@@ -40,43 +40,43 @@ public sealed class CornerClose : BendAssist {
                   trimmedEdge = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Trimmed (-halfBD, 0, -lineShift, 0) : (PLine)pLine.Trimmed (halfBD, 0, lineShift, 0),
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, halfBD, 0, lineShift) : (PLine)pLine.Trimmed (0, -halfBD, 0, -lineShift),
-                     _ => throw new NotImplementedException ()
+                     _ => null!
                   };
-                  trimmedEdge.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, trimmedEdge);
                } else if (mStepStartPts.Contains (pLine.EndPoint)) {
                   trimmedEdge = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Trimmed (0, 0, -lineShift, 0) : (PLine)pLine.Trimmed (0, 0, lineShift, 0),
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, 0, 0, lineShift) : (PLine)pLine.Trimmed (0, 0, 0, -lineShift),
-                     _ => throw new NotImplementedException ()
+                     _ => null!
                   };
-                  trimmedEdge.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, trimmedEdge);
                } else if (mStepEndPts.Contains (pLine.StartPoint)) {
                   trimmedEdge = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Trimmed (-halfBD, 0, 0, 0) : (PLine)pLine.Trimmed (halfBD, 0, 0, 0),
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, halfBD, 0, 0) : (PLine)pLine.Trimmed (0, -halfBD, 0, 0),
-                     _ => throw new NotImplementedException ()
+                     _ => null!
                   };
-                  trimmedEdge.InsertAt (++mIndex, mNewLines);
-               } else pLine.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, trimmedEdge);
+               } else mNewLines.Insert (++mIndex, pLine);
             } else {
                if (mStepLines.IndexOf (pLine) % 2 == 0) {
                   PLine translatedLine = pLine.Orientation switch {
                      Horizontal => pLine.EndPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Translated (0, lineShift) : (PLine)pLine.Translated (0, -lineShift),
                      Vertical => pLine.EndPoint.X < mPart.Centroid.X ? (PLine)pLine.Translated (lineShift, 0) : (PLine)pLine.Translated (-lineShift, 0),
-                     _ => throw new NotImplementedException ()
+                     _ => null!
                   };
-                  translatedLine.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, translatedLine);
                } else {
                   (PLine extrudedLine, PLine trimmedLine) = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.X < mPart.Centroid.X ? ((PLine)pLine.Trimmed (-halfBA, 0, 0, 0).Translated (0, halfBD), (PLine)pLine.Trimmed (lineShift, 0, pLine.Length - halfBA, 0))
                                                                         : ((PLine)pLine.Trimmed (halfBA, 0, 0, 0).Translated (0, -halfBD), (PLine)pLine.Trimmed (-lineShift, 0, -(pLine.Length - halfBA), 0)),
                      Vertical => pLine.StartPoint.Y < mPart.Centroid.Y ? ((PLine)pLine.Trimmed (0, -halfBA, 0, 0).Translated (-halfBD, 0), (PLine)pLine.Trimmed (0, lineShift, 0, pLine.Length - halfBA))
                                                                       : ((PLine)pLine.Trimmed (0, halfBA, 0, 0).Translated (halfBD, 0), (PLine)pLine.Trimmed (0, -lineShift, 0, -(pLine.Length - halfBA))),
-                     _ => throw new NotImplementedException ()
+                     _ => (null!, null!)
                   };
-                  trimmedLine.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, trimmedLine);
                   mNewLines.Add (new PLine (trimmedLine.EndPoint, extrudedLine.StartPoint, ++mIndex));
-                  extrudedLine.InsertAt (++mIndex, mNewLines);
+                  mNewLines.Insert (++mIndex, extrudedLine);
                }
             }
          }

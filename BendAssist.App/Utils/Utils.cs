@@ -47,6 +47,7 @@ public static class BendUtils {
 
    /// <summary>Inserts the given pline at the lines at the given index</summary>
    public static List<PLine> InsertAt (this PLine l, int index, List<PLine> lines) {
+      if (lines.Count == 0) { lines.Add (l); return lines; }
       var len = lines.Count + 1;
       var tmp = new PLine[len];
       var (ptIndex, inserted) = (0, false);
