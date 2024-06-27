@@ -23,12 +23,8 @@ internal sealed class Viewport : Canvas {
         mPart = part;
         if (part is null || part.PLines is null || part.BendLines is null) return;
         mLines ??= [];
-        if (part is ProcessedPart pr) {
-
-        } else {
-            mLines.AddRange (part.PLines.Where (pl => !mLines.HasDuplicate (pl)));
-            mLines.AddRange (part.BendLines.Where (pl => !mLines.HasDuplicate (pl)));
-        }
+        mLines.AddRange (part.PLines.Where (pl => !mLines.HasDuplicate (pl)));
+        mLines.AddRange (part.BendLines.Where (pl => !mLines.HasDuplicate (pl)));
         UpdateBound ();
         ZoomExtents ();
     }

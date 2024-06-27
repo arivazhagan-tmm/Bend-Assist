@@ -1,4 +1,5 @@
-﻿using BendAssist.App.FileHandling;
+﻿using BendAssist.App.BendAssists;
+using BendAssist.App.FileHandling;
 using BendAssist.App.Model;
 using BendAssist.App.View;
 using Microsoft.Win32;
@@ -83,14 +84,14 @@ public partial class MainWindow : Window {
             if (dlg.ShowDialog () is true) {
                 var reader = new GeoReader (dlg.FileName);
                 var fileName = dlg.FileName;
-                var part = reader.ParsePart ();
+                mPart = reader.ParsePart ();
                 mViewport?.Clear ();
-                mViewport?.UpdateViewport (part);
+                mViewport?.UpdateViewport (mPart);
                 // Info of the part
                 string[] infobox = ["File Name : ", "Sheet Size : ", "BendLines : "];
                 string[] infoboxvalue = [$"{Path.GetFileNameWithoutExtension (fileName)}{Path.GetExtension (fileName)}",
-                                         $"{part.Bound.Width:F2} X {part.Bound.Height:F2}",
-                                         $"{part.BendLines.Count}"];
+                                         $"{mPart.Bound.Width:F2} X {mPart.Bound.Height:F2}",
+                                         $"{mPart.BendLines.Count}"];
                 infoGrid.Children.Clear ();
                 for (int i = 0; i < infobox.Length; i++) {
                     infoGrid.Children.Add (new Label () { Content = infobox[i], Margin = new Thickness (5, 5, 0, 0) });
@@ -106,6 +107,7 @@ public partial class MainWindow : Window {
                 Tag = option,
                 Style = btnStyle,
             };
+            btn.Click += OnOptionClicked;
             btnGrid.Children.Add (btn);
         }
         optionPanel.Children.Add (btnGrid);
@@ -124,9 +126,37 @@ public partial class MainWindow : Window {
         mMainPanel.Content = dp;
         Background = Brushes.WhiteSmoke;
     }
+    void OnOptionClicked (object sender, RoutedEventArgs e) { // Handle the button events
+        if (sender is not Button btn || mViewport is null) return;
+        if (!Enum.TryParse ($"{btn.Tag}", out EBendAssist opt)) return;
+        switch (opt) {
+            case EBendAssist.BendDeduction:
+                mCurrentprocess = new BendDeduction (mPart, EBDAlgorithm.EquallyDistributed);
+                break;
+            case EBendAssist.BendRelief:
+                mCurrentprocess = new BendRelief (mPart);
+                break;
+            case EBendAssist.CornerClose:
+                mCurrentprocess = new CornerClose (mPart);
+                break;
+            case EBendAssist.CornerRelief:
+                mCurrentprocess = new CornerRelief (mPart);
+                break;
+            case EBendAssist.AddFlange:
+                mCurrentprocess = new MakeFlange (mPart);
+                break;
+        }
+        mCurrentprocess.Execute ();
+        if (mCurrentprocess.ProcessedPart != null) {
+            mViewport.UpdateViewport (mCurrentprocess.ProcessedPart);
+            mViewport.ZoomExtents ();
+        }
+    }
     #endregion
 
     #region Private Data ---------------------------------------------
     Viewport? mViewport;
+    Part mPart;
+    BendAssists.BendAssist mCurrentprocess; // Current bend assist process being applied
     #endregion
 }
