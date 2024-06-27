@@ -8,3 +8,9 @@ public enum EBendAssist { AddFlange, BendDeduction, BendRelief, CornerClose, Cor
 
 /// <summary>Bend deduction algorithms</summary>
 public enum EBDAlgorithm { EquallyDistributed, PartiallyDistributed }
+
+/// <summary>Location of the points and lines</summary>
+public enum ELoc { Bottom, Left, Right, Top }
+
+/// <summary>Cartesian Coordinates</summary>
+public enum EPCoord { X, Y }
