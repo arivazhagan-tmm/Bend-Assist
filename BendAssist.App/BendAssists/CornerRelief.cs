@@ -17,7 +17,7 @@ public sealed class CornerRelief : BendAssist {
       List<Point2> intersectPts = [], // Intersect points between the two bend lines.
                    pLinesStartPts = [], // All starting points of the PLines.
                    pLinesEndPts = []; // All ending points of the PLines.
-      if (mPart.BendLines.Count >= 2 && mPart.PLines.Count > 0) {
+      if (mPart.BendLines.Count >= 2) {
          for (int i = 0; i < mPart.BendLines.Count - 1; i++) {
             var (p1, cP1) = GetIntersectBendPts (mPart.BendLines[i].StartPoint, i);
             if (p1 > 0) intersectPts.Add (cP1);
@@ -60,7 +60,7 @@ public sealed class CornerRelief : BendAssist {
    /// <summary>Each new 45 degree points for an intersect points between each two plines and bend lines</summary>
    List<Point2> UpdatedVertices () {
       Dictionary<Point2, List<Point2>> intersectPtAndBendLines = [];// Intersect point
-      //along with respective bend lines another two points.
+      //along with respective bend lines another point.
       for (int i = 0; i < mIntersectPts.Count; i++) {
          List<Point2> tempPoint = [];
          foreach (var pLine in mPart!.BendLines) {
@@ -131,7 +131,7 @@ public sealed class CornerRelief : BendAssist {
    }
 
    /// <summary>Get a new point for corner relief</summary>
-   static Point2 GetPoint (double px, double py, double cx, double cy, double bendAllowance) {
+   Point2 GetPoint (double px, double py, double cx, double cy, double bendAllowance) {
       if (cx.IsEqual (px) && cy > py) return new Point2 (cx, cy - bendAllowance / 2);
       else if (cx.IsEqual (px) && cy < py) return new Point2 (cx, cy + bendAllowance / 2);
       else if (cy.IsEqual (py) && cx > px) return new Point2 (cx - bendAllowance / 2, cy);
@@ -141,9 +141,9 @@ public sealed class CornerRelief : BendAssist {
    #endregion
 
    #region Private Data ---------------------------------------------
-   readonly List<Point2> mIntersectPts = [], // Intersect point between the two bend lines and plines.
-                         mNew45DegVertices = []; // 45 degree points.
-   readonly double mBendAllowance; // Bend Allowance value.(Predefined Material 1.0038 with a bend radius value is 2)
+   List<Point2> mIntersectPts = [], // Intersect point between the two bend lines and plines.
+                mNew45DegVertices = []; // 45 degree points.
+   readonly double mBendAllowance; // Bend Allowance value.(Predefined material 1.0038 with a bend radius value is 2)
    #endregion
 }
 #endregion
