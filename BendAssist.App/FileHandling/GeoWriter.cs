@@ -20,7 +20,7 @@ public class GeoWriter {
    /// <summary>Writes a new geo file with new vertices</summary>
    /// copies the lines from the imported file which are not
    /// changed by the modification done on the part.
-   public void Save (string fileName) {    // Gets the file name where it has to be exported
+   public void WriteToGeo (string fileName) {    // Gets the file name where it has to be exported
       var lines = File.ReadAllLines (mFileName!).ToList (); // Reads the imported file
       using StreamWriter writer = new (fileName);
       foreach (string line in lines) {

@@ -78,7 +78,7 @@ public partial class MainWindow : Window {
          if (dlg.ShowDialog () is true) {
             if (mBendAssist != null && mBendAssist.ProcessedPart != null) {
                var writer = new GeoWriter (mBendAssist.ProcessedPart, currentFileName!);
-               writer.Save (dlg.FileName);
+               writer.WriteToGeo (dlg.FileName);
             }
          }
       };
