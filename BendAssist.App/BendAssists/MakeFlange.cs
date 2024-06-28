@@ -39,30 +39,34 @@ public sealed class MakeFlange : BendAssist {
 
       // Translates the line with the offset values
       var translatedLine = (PLine)mPline.Translated (dx, dy);
+      pLines?.Add (translatedLine);
+
+      if (IsLineInclined ()) {
+         // Inserts the plines at the specified index
+         pLines?.Add (new PLine (mPline.StartPoint, translatedLine.StartPoint));
+         pLines?.Add (new PLine (translatedLine.EndPoint, mPline.EndPoint));
+      }
 
       // Get the lines from the part except the selected line
       var lines = mPart!.PLines.Where (x => x.Index != mPline.Index).ToList ();
-
-      if (mPline.Orientation == EOrientation.Inclined) {
-         // Inserts the plines at the specified index
-         pLines = BendUtils.InsertAt (new PLine (mPline.StartPoint, translatedLine.StartPoint), mPline.Index, lines!);
-         pLines?.Add (new PLine (translatedLine.StartPoint, translatedLine.EndPoint, mPline.Index + 1));
-         pLines = BendUtils.InsertAt (new PLine (translatedLine.EndPoint, mPline.EndPoint), mPline.Index + 2, pLines!);
-      } else {
-         foreach (var pline in lines!) {
-            var (p1, p2) = (pline.StartPoint, pline.EndPoint);
-            pLines?.Add (translatedLine);
+      foreach (var pline in lines!) {
+         if (IsLineInclined ()) pLines?.Add (pline);
+         else {
             // Checks for the common vertex for selected pline and plines in the part
             // Pline's points is checked with selected pline's points
             // and creates a new pline with the translated points
+            var (p1, p2) = (pline.StartPoint, pline.EndPoint);
             pLines?.Add (mPline.HasVertex (p1) ? new PLine (translatedLine.EndPoint, p2, pline.Index) :
                          mPline.HasVertex (p2) ? new PLine (p1, translatedLine.StartPoint, pline.Index) : pline);
          }
       }
       // Bendline is created at the previous position of the selected pline
-      bendLines?.Add (new BendLine (startPt, endPt, 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
+      foreach (var bendline in mPart.BendLines) bendLines?.Add (bendline);
+      bendLines?.Add (new BendLine (startPt, endPt, mPart.BendLines.Count - 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
       if (pLines != null && bendLines != null) mProcessedPart = new (pLines, bendLines, mRadius, EBendAssist.AddFlange);
    }
+
+   bool IsLineInclined () => mPline?.Orientation == EOrientation.Inclined;
    #endregion
 
    #region Private Data ---------------------------------------------
@@ -70,28 +74,6 @@ public sealed class MakeFlange : BendAssist {
    readonly float mBendAngle;    // Bend angle of flange
    readonly PLine? mPline;    // Selected pline
    readonly float mRadius;    // Bend radius
-   #endregion
-
-   #region Commented ------------------------------------------------
-   //public static List<PLine> InsertAt (this PLine l, int index, List<PLine> lines) {
-   //   if (lines.Count == 0) { lines.Add (l); return lines; }
-   //   var len = lines.Count + 1;
-   //   var tmp = new PLine[len];
-   //   var (ptIndex, inserted) = (1, false);
-   //   for (int i = 0; i < len; i++) {
-   //      if (i == index - 1) {
-   //         tmp[i] = new (l.StartPoint.Duplicate (ptIndex), l.EndPoint.Duplicate (++ptIndex), index);
-   //         inserted = true;
-   //      } else {
-   //         var line = lines[i];
-   //         var (startPt, endPt) = (line.StartPoint, line.EndPoint);
-   //         tmp[i] = !inserted ? new (startPt, endPt, i + 1)
-   //                            : new (startPt.Duplicate (ptIndex), endPt.Duplicate (++ptIndex), i + 1);
-   //         ptIndex = line.EndPoint.Index;
-   //      }
-   //   }
-   //   return [.. tmp];
-   //}
    #endregion
 }
 #endregion
