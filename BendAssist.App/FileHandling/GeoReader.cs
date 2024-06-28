@@ -60,7 +60,8 @@ public class GeoReader (string fileName) {
                break;
          }
       }
-      return new Part (pLines, bLines, thickness);
+      var part = new Part (pLines, bLines, thickness) { FilePath = fileName };
+      return part;
 
       bool ReadLine (out string str) { // Reads the str and return the trimmed str if it is not null
          str = reader.ReadLine ()!;
