@@ -77,7 +77,7 @@ public class GeoReader (string fileName) {
          return (vertices[int.Parse (coords[0]) - 1], vertices[int.Parse (coords[1]) - 1]);
       }
 
-      float ParseInfo (string value) => (float)Math.Round (double.Parse (value)); // Rounds off the parsed value
+      float ParseInfo (string value) => (float)Math.Round (double.Parse (value), 3); // Rounds off the parsed value
 
       void SkipLine () => reader.ReadLine (); // Skips a str
    }

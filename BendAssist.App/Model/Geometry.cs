@@ -4,9 +4,9 @@ using BendAssist.App.Utils;
 namespace BendAssist.App.Model;
 
 #region struct Point2 -----------------------------------------------------------------------------
-public readonly record struct Point2 (double X = double.NaN, double Y = double.NaN, int Index = -1) {
+public readonly record struct Point2 (double X, double Y, int Index = -1) {
    #region Properties -----------------------------------------------
-   public bool IsSet => !double.IsNaN (X) && !double.IsNaN (Y);
+   public bool IsSet => !double.IsNaN (Y) && !double.IsNaN (Y);
    #endregion
 
    #region Methods --------------------------------------------------
@@ -29,9 +29,10 @@ public readonly record struct Point2 (double X = double.NaN, double Y = double.N
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
       neighbour = new Point2 ();
       if (neighbours is null || neighbours.Count () is 0) return false;
-      var pt = this;
-      neighbour = neighbours.ToList ().Find (p => p.DistanceTo (pt).IsEqual (proximity));
-      return neighbour.IsSet;
+      var hasNeighbour = false;
+      foreach (var pt in neighbours)
+         if (pt.DistanceTo (this).IsEqual (proximity)) { hasNeighbour = true; neighbour = pt; break; }
+      return hasNeighbour;
    }
 
    /// <summary>Radially moves the point to distance at theta in degrees</summary>
