@@ -6,9 +6,9 @@ namespace BendAssist.App.FileHandling;
 #region class GeoWriter ---------------------------------------------------------------------------
 public class GeoWriter {
    #region Constructor ---------------------------------------------
-   /// <summary>Gets the processed part</summary>
-   public GeoWriter (Part part) {
-      mPart = part.ReBuild ();
+   /// <summary>Gets the processed part and imported file</summary>
+   public GeoWriter (Part part, string fileName) {
+      (mPart, mFileName) = (part.ReBuild (), fileName);
       mBoundMin = $"{mPart.Bound.MinX:F9} {mPart.Bound.MinY:F9} 0.000000000";
       mBoundMax = $"{mPart.Bound.MaxX:F9} {mPart.Bound.MaxY:F9} 0.000000000";
       mCentroid = $"{mPart.Centroid.X:F9} {mPart.Centroid.Y:F9} 0.000000000";
@@ -21,7 +21,7 @@ public class GeoWriter {
    /// copies the lines from the imported file which are not
    /// changed by the modification done on the part.
    public void Save (string fileName) {    // Gets the file name where it has to be exported
-      var lines = File.ReadAllLines (mPart.FilePath!).ToList (); // Reads the imported file
+      var lines = File.ReadAllLines (mFileName!).ToList (); // Reads the imported file
       using StreamWriter writer = new (fileName);
       foreach (string line in lines) {
          switch (line.Trim ()) {
@@ -31,9 +31,10 @@ public class GeoWriter {
                mIsLineNeeded = false;
                break;
             case "#~3":
-               writer.WriteLine ("#~3{0}{0}{0}", "\r\n" + $"{0:F9} {0:F9} {1:F9}\r\n{1:F9} {0:F9} {0:F9} {0:F9}\r\n" +
-                   $"{0:F9} {1:F9} {0:F9} {0:F9}\r\n{0:F9} {0:F9} {1:F9} {0:F9}\r\n{0:F9} {0:F9} {0:F9} {1:F9}" +
-                   "{1}{0}{2}{0}{3}{0}{4}{0}1{0}0{0}0{0}0{0}0{0}##~~", "\r\n", mBoundMin, mBoundMax, mCentroid, mArea);
+               writer.WriteLine ("#~3{0}{0}{0}", "\r\n");
+               writer.WriteLine ($"{0:F9} {0:F9} {1:F9}\r\n{1:F9} {0:F9} {0:F9} {0:F9}\r\n" +
+                   $"{0:F9} {1:F9} {0:F9} {0:F9}\r\n{0:F9} {0:F9} {1:F9} {0:F9}\r\n{0:F9} {0:F9} {0:F9} {1:F9}");
+               writer.WriteLine ("{1}{0}{2}{0}{3}{0}{4}{0}1{0}0{0}0{0}0{0}0{0}##~~", "\r\n", mBoundMin, mBoundMax, mCentroid, mArea);
                mIsLineNeeded = false;
                break;
             case "#~31": // Writes the new vertices
@@ -80,6 +81,7 @@ public class GeoWriter {
    int mBLCount;    // Holds the count of the bendlines written
    bool mIsLineNeeded;  // Set to false if the line in the imported file has to be skipped
    readonly Part mPart;       // The processed part
+   readonly string? mFileName;    // Imported file
    readonly string mBoundMin, mBoundMax, mCentroid, mArea;
    #endregion
 }
