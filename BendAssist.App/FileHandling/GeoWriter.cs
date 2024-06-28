@@ -6,8 +6,9 @@ namespace BendAssist.App.FileHandling;
 #region class GeoWriter ---------------------------------------------------------------------------
 public class GeoWriter {
     #region Constructor ---------------------------------------------
-    public GeoWriter (Part part, string filename) {
-        (mPart, mFilename) = (part.ReBuild (), filename);
+    /// <summary>Gets the processed part</summary>
+    public GeoWriter (Part part) {
+        mPart = part.ReBuild ();
         mBoundMin = $"{mPart.Bound.MinX:F9} {mPart.Bound.MinY:F9} 0.000000000";
         mBoundMax = $"{mPart.Bound.MaxX:F9} {mPart.Bound.MaxY:F9} 0.000000000";
         mCentroid = $"{mPart.Centroid.X:F9} {mPart.Centroid.Y:F9} 0.000000000";
@@ -20,7 +21,7 @@ public class GeoWriter {
     /// copies the lines from the imported file which are not
     /// changed by the modification done on the part.
     public void Save (string fileName) {    // Gets the file name where it has to be exported
-        var lines = File.ReadAllLines (mFilename).ToList (); // Reads the imported file
+        var lines = File.ReadAllLines (mPart.FilePath!).ToList (); // Reads the imported file
         using StreamWriter writer = new (fileName);
         foreach (string line in lines) {
             switch (line.Trim ()) {
@@ -79,7 +80,6 @@ public class GeoWriter {
     int mBLCount;    // Holds the count of the bendlines written
     bool mIsLineNeeded;  // Set to false if the line in the imported file has to be skipped
     readonly Part mPart;       // The processed part
-    readonly string mFilename; // Imported file's name
     readonly string mBoundMin, mBoundMax, mCentroid, mArea;
     #endregion
 }
