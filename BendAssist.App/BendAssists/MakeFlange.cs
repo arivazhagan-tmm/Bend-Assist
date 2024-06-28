@@ -31,21 +31,31 @@ public sealed class MakeFlange : BendAssist {
         // Calculates the offsets in x and y
         var (dx, dy) = (mHeight * Math.Cos (angle), mHeight * Math.Sin (angle));
         (dx, dy) = (startPt.X < centroidX && endPt.X < centroidX ? -dx : Math.Abs (dx),
-                   startPt.Y < centroidY && endPt.Y < centroidY ? -dy : Math.Abs (dy));
+                    startPt.Y < centroidY && endPt.Y < centroidY ? -dy : Math.Abs (dy));
 
         // Translates the line with the offset values
         var translatedLine = (PLine)mPline.Translated (dx, dy);
-        pLines?.Add (translatedLine);
+
+        
 
         // Get the lines from the part except the selected line
         var lines = mPart!.PLines.Where (x => x.Index != mPline.Index).ToList ();
-        foreach (var pline in lines) {
+        if (mPline.Orientation == EOrientation.Inclined) {
+            lines?.Add (new PLine (translatedLine.StartPoint, translatedLine.EndPoint, mPline.Index + 1));
+            pLines = BendUtils.InsertAt (new PLine (mPline.StartPoint, translatedLine.StartPoint), mPline.Index, lines!);
+            pLines = BendUtils.InsertAt (new PLine (translatedLine.EndPoint, mPline.EndPoint), mPline.Index + 2, lines!);
+        }
+        foreach (var pline in lines!) {
             var (p1, p2) = (pline.StartPoint, pline.EndPoint);
-            // Checks for the common vertex for selected pline and plines in the part
-            // Pline's points is checked with selected pline's points
-            // and creates a new pline with the translated points
-            pLines?.Add (mPline.HasVertex (p1) ? new PLine (translatedLine.EndPoint, p2, pline.Index) :
-                         mPline.HasVertex (p2) ? new PLine (p1, translatedLine.StartPoint, pline.Index) : pline);
+            if (mPline.Orientation == EOrientation.Inclined) pLines?.Add (pline);
+            else {
+                pLines?.Add (translatedLine);
+                // Checks for the common vertex for selected pline and plines in the part
+                // Pline's points is checked with selected pline's points
+                // and creates a new pline with the translated points
+                pLines?.Add (mPline.HasVertex (p1) ? new PLine (translatedLine.EndPoint, p2, pline.Index) :
+                             mPline.HasVertex (p2) ? new PLine (p1, translatedLine.StartPoint, pline.Index) : pline);
+            }
         }
         // Bendline is created at the previous position of the selected pline
         bendLines?.Add (new BendLine (startPt, endPt, 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
