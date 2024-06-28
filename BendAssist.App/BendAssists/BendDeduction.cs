@@ -8,6 +8,7 @@ namespace BendAssist.App.BendAssists;
 #region class BendDeduction -----------------------------------------------------------------------
 public sealed class BendDeduction : BendAssist {
    #region Constructors ---------------------------------------------
+   /// <summary>Gets the part and algorithm from the user as parameters</summary>
    public BendDeduction (Part part, EBDAlgorithm algorithm) => (mPart, mAlgorithm) = (part, algorithm);
    #endregion
 
