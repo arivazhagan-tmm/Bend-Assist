@@ -124,8 +124,9 @@ internal sealed class Viewport : Canvas {
 
    // Updates the bound of drawn entities using projection transform
    void UpdateBound () {
-      List<Point2> boundPts = mPart != null ? mPart.Vertices : [];
+      List<Point2> boundPts = [];
       var vec = new Vector2 (mPart!.Bound.MaxX * 1.25, 0.0);
+      if (mPart != null) boundPts.AddRange (mPart.Vertices);
       if (mProcessedPart != null) boundPts.AddRange (mProcessedPart.Vertices.Select (v => v + vec));
       if (boundPts.Count > 2) UpdatePXfm (new Bound2 (boundPts));
    }

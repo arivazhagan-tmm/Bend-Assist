@@ -36,61 +36,67 @@ public partial class MainWindow : Window {
     #region Methods --------------------------------------------------
     #endregion
 
-    #region Implementation -------------------------------------------
-    void OnLoaded (object sender, RoutedEventArgs e) {
-        It = this;
-        #region Styles ----------------------------
-        var spStyle = new Style ();
-        spStyle.Setters.Add (new Setter (HeightProperty, 20.0));
-        spStyle.Setters.Add (new Setter (VerticalContentAlignmentProperty, VA.Top));
-        spStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.Transparent));
-        var menuPanel = new StackPanel () { Style = spStyle };
-        var menuStyle = new Style ();
-        menuStyle.Setters.Add (new Setter (WidthProperty, 50.0));
-        menuStyle.Setters.Add (new Setter (HeightProperty, 20.0));
-        var btnStyle = new Style ();
-        btnStyle.Setters.Add (new Setter (WidthProperty, 100.0));
-        btnStyle.Setters.Add (new Setter (HeightProperty, 25.0));
-        btnStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.WhiteSmoke));
-        btnStyle.Setters.Add (new Setter (MarginProperty, new Thickness (5.0)));
-        btnStyle.Setters.Add (new Setter (HorizontalAlignmentProperty, HA.Left));
-        btnStyle.Setters.Add (new Setter (VerticalAlignmentProperty, VA.Top));
-        var borderStyle = new Style () { TargetType = typeof (Border) };
-        borderStyle.Setters.Add (new Setter (Border.CornerRadiusProperty, new CornerRadius (5.0)));
-        borderStyle.Setters.Add (new Setter (Border.BorderThicknessProperty, new Thickness (5.0)));
-        btnStyle.Resources = new ResourceDictionary { [typeof (Border)] = borderStyle };
-        var tbStyle = new Style ();
-        tbStyle.Setters.Add (new Setter (HeightProperty, 20.0));
-        tbStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.WhiteSmoke));
-        tbStyle.Setters.Add (new Setter (MarginProperty, new Thickness (5, 5, 0, 0)));
-        tbStyle.Setters.Add (new Setter (HorizontalAlignmentProperty, HA.Left));
-        tbStyle.Setters.Add (new Setter (VerticalAlignmentProperty, VA.Top));
-        #endregion
-        var menu = new Menu ();
-        var fileMenu = new MenuItem () { Style = menuStyle, Header = "_File" };
-        var saveMenu = new MenuItem () { Header = "_Export...", IsEnabled = false };
-        var btnGrid = new UniformGrid () { Columns = 2 }; // Displays bend assist options
-        var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of part imported
-        var optionPanel = new StackPanel () { Margin = new Thickness (0, 20, 0, 0) };
-        saveMenu.Click += (s, e) => {
-            var currentFileName = "";
-            var dlg = new SaveFileDialog () { FileName = $"{Path.GetFileNameWithoutExtension (currentFileName)}_BendProfile", Filter = "GEO|*.geo" };
-            if (dlg.ShowDialog () is true) { }
-        };
-        var openMenu = new MenuItem () { Header = "_Import...", IsEnabled = true };
-        openMenu.Click += (s, e) => {
-            var dlg = new OpenFileDialog () {
-                DefaultExt = ".geo", Title = "Import Geo file", Filter = "Geo files (*.geo)|*.geo"
-            };
-            if (dlg.ShowDialog () is true) {
-                var reader = new GeoReader (dlg.FileName);
-                var fileName = dlg.FileName;
-                mPart = reader.ParsePart ();
-                mViewport?.Clear ();
-                mViewport?.UpdateViewport (mPart);
-                // Info of the part
-                string[] infobox = ["File Name : ", "Sheet Size : ", "BendLines : "];
-                string[] infoboxvalue = [$"{Path.GetFileNameWithoutExtension (fileName)}{Path.GetExtension (fileName)}",
+   #region Implementation -------------------------------------------
+   void OnLoaded (object sender, RoutedEventArgs e) {
+      It = this;
+      #region Styles ----------------------------
+      var spStyle = new Style ();
+      spStyle.Setters.Add (new Setter (HeightProperty, 20.0));
+      spStyle.Setters.Add (new Setter (VerticalContentAlignmentProperty, VA.Top));
+      spStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.Transparent));
+      var menuPanel = new StackPanel () { Style = spStyle };
+      var menuStyle = new Style ();
+      menuStyle.Setters.Add (new Setter (WidthProperty, 50.0));
+      menuStyle.Setters.Add (new Setter (HeightProperty, 20.0));
+      var btnStyle = new Style ();
+      btnStyle.Setters.Add (new Setter (WidthProperty, 100.0));
+      btnStyle.Setters.Add (new Setter (HeightProperty, 25.0));
+      btnStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.WhiteSmoke));
+      btnStyle.Setters.Add (new Setter (MarginProperty, new Thickness (5.0)));
+      btnStyle.Setters.Add (new Setter (HorizontalAlignmentProperty, HA.Left));
+      btnStyle.Setters.Add (new Setter (VerticalAlignmentProperty, VA.Top));
+      var borderStyle = new Style () { TargetType = typeof (Border) };
+      borderStyle.Setters.Add (new Setter (Border.CornerRadiusProperty, new CornerRadius (5.0)));
+      borderStyle.Setters.Add (new Setter (Border.BorderThicknessProperty, new Thickness (5.0)));
+      btnStyle.Resources = new ResourceDictionary { [typeof (Border)] = borderStyle };
+      var tbStyle = new Style ();
+      tbStyle.Setters.Add (new Setter (HeightProperty, 20.0));
+      tbStyle.Setters.Add (new Setter (BackgroundProperty, Brushes.WhiteSmoke));
+      tbStyle.Setters.Add (new Setter (MarginProperty, new Thickness (5, 5, 0, 0)));
+      tbStyle.Setters.Add (new Setter (HorizontalAlignmentProperty, HA.Left));
+      tbStyle.Setters.Add (new Setter (VerticalAlignmentProperty, VA.Top));
+      #endregion
+      var menu = new Menu ();
+      var fileMenu = new MenuItem () { Style = menuStyle, Header = "_File" };
+      var saveMenu = new MenuItem () { Header = "_Export..." };
+      var btnGrid = new UniformGrid () { Columns = 2 }; // Displays bend assist options
+      var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of imported file
+      var optionPanel = new StackPanel () { Margin = new Thickness (0, 20, 0, 0) };
+      saveMenu.Click += (s, e) => {
+         if (mPart == null) return;
+         var currentFileName = mPart.FilePath;
+         var dlg = new SaveFileDialog () { FileName = $"{Path.GetFileNameWithoutExtension (currentFileName)}_BendProfile", Filter = "GEO|*.geo" };
+         if (dlg.ShowDialog () is true) {
+            if (mBendAssist != null && mBendAssist.ProcessedPart != null) {
+               var writer = new GeoWriter (mBendAssist.ProcessedPart, currentFileName!);
+               writer.WriteToGeo (dlg.FileName);
+            }
+         }
+      };
+      var openMenu = new MenuItem () { Header = "_Import...", IsEnabled = true };
+      openMenu.Click += (s, e) => {
+         var dlg = new OpenFileDialog () {
+            DefaultExt = ".geo", Title = "Import Geo file", Filter = "Geo files (*.geo)|*.geo"
+         };
+         if (dlg.ShowDialog () is true) {
+            var reader = new GeoReader (dlg.FileName);
+            var fileName = dlg.FileName;
+            mPart = reader.ParsePart ();
+            mViewport?.Clear ();
+            mViewport?.UpdateViewport (mPart);
+            // Info of the part
+            string[] infobox = ["File Name : ", "Sheet Size : ", "BendLines : "];
+            string[] infoboxvalue = [$"{Path.GetFileNameWithoutExtension (fileName)}{Path.GetExtension (fileName)}",
                                          $"{mPart.Bound.Width:F2} X {mPart.Bound.Height:F2}",
                                          $"{mPart.BendLines.Count}"];
                 infoGrid.Children.Clear ();

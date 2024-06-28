@@ -2,14 +2,13 @@
 using System.Windows.Controls.Primitives;
 using System.Windows;
 using System.Windows.Input;
-using System.Reflection.Metadata;
 
 namespace BendAssist.App.View;
 
 #region class AssistUI ----------------------------------------------------------------------------
 public class AssistUI : UserControl {
    #region Constructor ----------------------------------------------
-   /// <summary>Gets an array of inputs required</summary>
+   /// <summary>Creates controls which takes input from the user</summary>
    public AssistUI (params string[] parameters) {
       UniformGrid ufg = new () { Rows = parameters.Length, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness (5, 10, 0, 0) };
       foreach (var param in parameters) {
