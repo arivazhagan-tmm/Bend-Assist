@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Controls;
 using BendAssist.App.Model;
 using BendAssist.App.Utils;
+using static System.Windows.Controls.ToolTipService;
 
 namespace BendAssist.App.View;
 
@@ -95,7 +96,7 @@ internal sealed class Viewport : Canvas {
       zoomExtnd.Click += (s, e) => ZoomExtents ();
       menu.Items.Add (zoomExtnd);
       ContextMenu = menu;
-      ToolTipService.SetToolTip (this, mToolTip);
+      SetToolTip (this, mToolTip);
       Children.Add (mCords);
    }
 

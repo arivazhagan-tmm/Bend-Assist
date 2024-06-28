@@ -9,13 +9,12 @@ namespace BendAssist.App.View;
 #region class AssistUI ----------------------------------------------------------------------------
 public class AssistUI : UserControl {
    #region Constructor ----------------------------------------------
-
    /// <summary>Gets an array of inputs required</summary>
-   public AssistUI (params string[] inputs) {
-      UniformGrid ufg = new UniformGrid () { Rows = inputs.Length, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness (5, 10, 0, 0) };
-      foreach (var input in inputs) {
-         Label lbl = new () { Content = input + " : ", Width = 50, Margin = new Thickness (5) };
-         TextBox tBox = new TextBox () { Width = 50, Height = 20, Margin = new Thickness (5) };
+   public AssistUI (params string[] parameters) {
+      UniformGrid ufg = new () { Rows = parameters.Length, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness (5, 10, 0, 0) };
+      foreach (var param in parameters) {
+         Label lbl = new () { Content = param + " : ", Width = 50, Margin = new Thickness (5) };
+         TextBox tBox = new () { Width = 50, Height = 20, Margin = new Thickness (5) };
          tBox.PreviewKeyDown += OnPreviewKeyDown;
          tBox.KeyDown += OnKeyDown;
          ufg.Children.Add (lbl);
