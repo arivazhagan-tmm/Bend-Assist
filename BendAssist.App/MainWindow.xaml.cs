@@ -67,14 +67,20 @@ public partial class MainWindow : Window {
       #endregion
       var menu = new Menu ();
       var fileMenu = new MenuItem () { Style = menuStyle, Header = "_File" };
-      var saveMenu = new MenuItem () { Header = "_Export...", IsEnabled = false };
+      var saveMenu = new MenuItem () { Header = "_Export..." };
       var btnGrid = new UniformGrid () { Columns = 2 }; // Displays bend assist options
-      var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of part imported
+      var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of imported file
       var optionPanel = new StackPanel () { Margin = new Thickness (0, 20, 0, 0) };
       saveMenu.Click += (s, e) => {
-         var currentFileName = "";
+         if (mPart == null) return;
+         var currentFileName = mPart.FilePath;
          var dlg = new SaveFileDialog () { FileName = $"{Path.GetFileNameWithoutExtension (currentFileName)}_BendProfile", Filter = "GEO|*.geo" };
-         if (dlg.ShowDialog () is true) { }
+         if (dlg.ShowDialog () is true) {
+            if (mBendAssist != null && mBendAssist.ProcessedPart != null) {
+               var writer = new GeoWriter (mBendAssist.ProcessedPart, currentFileName!);
+               writer.WriteToGeo (dlg.FileName);
+            }
+         }
       };
       var openMenu = new MenuItem () { Header = "_Import...", IsEnabled = true };
       openMenu.Click += (s, e) => {
