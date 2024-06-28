@@ -60,7 +60,8 @@ public class GeoReader (string fileName) {
                break;
          }
       }
-      return new Part (pLines, bLines, thickness);
+      var part = new Part (pLines, bLines, thickness) { FilePath = fileName };
+      return part;
 
       bool ReadLine (out string str) { // Reads the str and return the trimmed str if it is not null
          str = reader.ReadLine ()!;
@@ -77,7 +78,7 @@ public class GeoReader (string fileName) {
          return (vertices[int.Parse (coords[0]) - 1], vertices[int.Parse (coords[1]) - 1]);
       }
 
-      float ParseInfo (string value) => (float)Math.Round (double.Parse (value)); // Rounds off the parsed value
+      float ParseInfo (string value) => (float)Math.Round (double.Parse (value), 3); // Rounds off the parsed value
 
       void SkipLine () => reader.ReadLine (); // Skips a str
    }

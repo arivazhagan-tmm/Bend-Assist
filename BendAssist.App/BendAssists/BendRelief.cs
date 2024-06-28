@@ -12,61 +12,28 @@ public sealed class BendRelief : BendAssist {
     #region Methods -------------------------------------------------
     /// <summary>Method to asses whether bend relief necessary for slected base and bend line</summary>
     public override bool Assisted () {
-        if (mPart != null) {
-            if (mPart.BendLines.Count != 0) {
-                var temp = mPart.Vertices.Where (x => IsRepeated (mPart.Vertices, x)).Where (x => x.IsWithinBound (x, mPart.Bound)).ToList ();
-                if (temp.Count > 0) {
-                    mCanAssist = true;
-                    mCommonVertices = temp[..(temp.Count / 2)];
-                    mHLines = mPLines.Where (x=> x.Orientation == EOrientation.Horizontal).ToList ();
-                    mVLines = mPLines.Where (x=> x.Orientation == EOrientation.Vertical).ToList ();
-                }
-            }
-        }
         return mCanAssist;
     }
 
-    /// <summary>Find whether selected point is repeated in given set of vertices</summary>
-    bool IsRepeated (List<Point2> vertices, Point2 point) => vertices.Where (x => x == point).ToList ().Count > 1;
-
-    /// <summary>Find distance between a line and a bend line</summary>
-    double GetDistanceToLine (PLine line, BendLine bLine) =>
-            bLine.Orientation == EOrientation.Horizontal ? Math.Abs (line.StartPoint.Y - bLine.StartPoint.Y)
-                                 : Math.Abs (line.StartPoint.X - bLine.StartPoint.X);
-
-    /// <summary>Generates new vector2 with given angle and displacement value</summary>
-    Vector2 GetVector (double value, double angle) {
-        angle = angle.ToRadians ();
-        double dx1 = value * Math.Round (Math.Cos (angle));
-        double dy1 = value * Math.Round (Math.Sin (angle));
-        return new Vector2 (dx1, dy1);
-    }
-
-    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
-    Point2 FindIntersectPoint (PLine line, Point2 p, double angle) {
-        Point2 p1 = p.Translate (new Vector2 (1 * (Math.Sin (angle.ToRadians ())), 1 * (Math.Cos (angle.ToRadians ()))));
-        double slope1 = (p1.Y - p.Y) / (p1.X - p.X), slope2 = (line.EndPoint.Y - line.StartPoint.Y) / (line.EndPoint.X - line.StartPoint.X);
-        double intercept1 = p.Y - slope1 * (p.X), intercept2 = line.StartPoint.Y - slope2 * (line.StartPoint.X);
-        double commonX = intercept2 - intercept1 / slope1 - slope2;
-        return (slope1, slope2) switch {
-            (0, 0) => new Point2 (p.X, line.StartPoint.Y),
-            (double.NegativeInfinity or double.PositiveInfinity, double.NegativeInfinity or double.PositiveInfinity) => new Point2 (line.StartPoint.X, p.Y),
-            _ => new Point2 (commonX, slope1 * commonX + intercept1)
-        };
-    }
-
-    /// <summary>Find the nearest parallel line to the bendline from the given list of lines</summary>
-    PLine GetNearestParallelLine (List<PLine> lines, BendLine bLine) {
-        List<PLine> p = [.. lines.OrderBy (line => GetDistanceToLine (line, bLine))];
-        if (p.Count > 0)
-            return p.First ();
-        throw new ArgumentNullException (nameof (p));
+    public override void Execute () {
+        if (mPart != null) {
+            if (mPart.BendLines.Count != 0) {
+                var temp = mPart.Vertices.Where (x => IsRepeated (mPart.Vertices, x)).Where (x => IsWithinBound (x, mPart.Bound)).ToList ();
+                if (temp.Count > 0) {
+                    mCommonVertices = temp[..(temp.Count / 2)];
+                    mHLines = mPLines.Where (x => x.Orientation == EOrientation.Horizontal).ToList ();
+                    mVLines = mPLines.Where (x => x.Orientation == EOrientation.Vertical).ToList ();
+                    ApplyBendRelief (mPart);
+                }
+                return;
+            }
+        }
     }
     #endregion
 
     #region Implementation ------------------------------------------
     /// <summary>Method which creates a new processed part after craeting bend relief</summary>
-    public ProcessedPart ApplyBendRelief (Part part) {
+    ProcessedPart ApplyBendRelief (Part part) {
         List<PLine> lines = mPLines;
         foreach (var vertex in mCommonVertices) {
             foreach (var bl in part.BendLines) {
@@ -109,6 +76,46 @@ public sealed class BendRelief : BendAssist {
         }
         return new ProcessedPart (lines, part.BendLines, (float)part.Thickness, EBendAssist.BendRelief);
     }
+
+    /// <summary>Find whether selected point is repeated in given set of vertices</summary>
+    bool IsRepeated (List<Point2> vertices, Point2 point) => vertices.Where (x => x.Index == point.Index).ToList ().Count > 1;
+
+    /// <summary>Find distance between a line and a bend line</summary>
+    double GetDistanceToLine (PLine line, BendLine bLine) =>
+            bLine.Orientation == EOrientation.Horizontal ? Math.Abs (line.StartPoint.Y - bLine.StartPoint.Y)
+                                 : Math.Abs (line.StartPoint.X - bLine.StartPoint.X);
+
+    /// <summary>Generates new vector2 with given angle and displacement value</summary>
+    Vector2 GetVector (double value, double angle) {
+        angle = angle.ToRadians ();
+        double dx1 = value * Math.Round (Math.Cos (angle));
+        double dy1 = value * Math.Round (Math.Sin (angle));
+        return new Vector2 (dx1, dy1);
+    }
+
+    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
+    Point2 FindIntersectPoint (PLine line, Point2 p, double angle) {
+        Point2 p1 = p.Translate (new Vector2 (1 * (Math.Sin (angle.ToRadians ())), 1 * (Math.Cos (angle.ToRadians ()))));
+        double slope1 = (p1.Y - p.Y) / (p1.X - p.X), slope2 = (line.EndPoint.Y - line.StartPoint.Y) / (line.EndPoint.X - line.StartPoint.X);
+        double intercept1 = p.Y - slope1 * (p.X), intercept2 = line.StartPoint.Y - slope2 * (line.StartPoint.X);
+        double commonX = intercept2 - intercept1 / slope1 - slope2;
+        return (slope1, slope2) switch {
+            (0, 0) => new Point2 (p.X, line.StartPoint.Y),
+            (double.NegativeInfinity or double.PositiveInfinity, double.NegativeInfinity or double.PositiveInfinity) => new Point2 (line.StartPoint.X, p.Y),
+            _ => new Point2 (commonX, slope1 * commonX + intercept1)
+        };
+    }
+
+    /// <summary>Find the nearest parallel line to the bendline from the given list of lines</summary>
+    PLine GetNearestParallelLine (List<PLine> lines, BendLine bLine) {
+        List<PLine> p = [.. lines.OrderBy (line => GetDistanceToLine (line, bLine))];
+        if (p.Count > 0)
+            return p.First ();
+        throw new ArgumentNullException (nameof (p));
+    }
+
+    /// <summary>Check whether a point2 is within a bound2</summary>
+    public static bool IsWithinBound (Point2 p, Bound2 b) => p.X < b.MaxX && p.X > b.MinX && p.Y < b.MaxY && p.Y > b.MinY;
     #endregion
 
     #region Private --------------------------------------------------

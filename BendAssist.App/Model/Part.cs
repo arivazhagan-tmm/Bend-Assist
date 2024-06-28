@@ -31,6 +31,7 @@ public class Part {
     #endregion
 
     #region Properties -----------------------------------------------
+    public string? FilePath;
     public readonly double Area;
     public readonly Point2 Centroid;
     public readonly Bound2 Bound;

@@ -42,6 +42,12 @@ public static class BendUtils {
     public static double GetBendAllowance (double angle, double kFactor, double thickness, double radius)
        => angle.ToRadians () * (kFactor * thickness + radius);
 
+    /// <summary>Returns the array of indices of the connected pLines from the given pLine</summary>
+    public static int[] GetCPIndices (PLine refPLine, List<PLine> pLines) {
+        var (start, end) = (refPLine.StartPoint, refPLine.EndPoint);
+        return pLines.Where (c => c.Index != refPLine.Index && (c.HasVertex (start) || c.HasVertex (end))).Select (c => c.Index).ToArray ();
+    }
+
     /// <summary>Checks if the given line present in the list or not by comparing the vertices</summary>
     public static bool HasDuplicate (this List<Line> lines, Line l) {
         foreach (var line in lines)
