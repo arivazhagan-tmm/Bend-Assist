@@ -83,6 +83,8 @@ internal sealed class Viewport : Canvas {
       #region Attaching Events ------------------
       MouseMove += OnMouseMove;
       MouseWheel += OnMouseWheel;
+      MouseEnter += (s, e) => Cursor = Cursors.Cross;
+      MouseLeave += (s, e) => Cursor = Cursors.Arrow;
       SizeChanged += (s, e) => ZoomExtents ();
       #endregion
 
