@@ -57,10 +57,9 @@ internal sealed class Viewport : Canvas {
    #region Implementation -------------------------------------------
    // Populates the snap source with the vertices of the plines and bend lines
    void LoadSnapSource () {
-      if (mPart is null || mProcessedPart is null) return;
       mSnapSource ??= [];
-      mSnapSource.AddRange (mPart.Vertices);
-      mSnapSource.AddRange (mProcessedPart.Vertices);
+      mSnapSource.AddRange (mPart!.Vertices);
+      if (mProcessedPart != null) mSnapSource.AddRange (mProcessedPart.Vertices);
    }
 
    // Initializes the rendering objects and attaches the mouse events
@@ -88,19 +87,26 @@ internal sealed class Viewport : Canvas {
       #endregion
 
       mCords = new TextBlock () { Background = Brushes.Transparent };
+      mToolTip = new ToolTip ();
       var menu = new ContextMenu ();
       var zoomExtnd = new MenuItem () { Header = "Zoom Extents" };
       zoomExtnd.Click += (s, e) => ZoomExtents ();
       menu.Items.Add (zoomExtnd);
       ContextMenu = menu;
+      ToolTipService.SetToolTip (this, mToolTip);
       Children.Add (mCords);
    }
 
    // Udpates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
-      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt))
+      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
          mSnapPt = mMousePt = pt;
+         // Tool tip for snap points
+         mToolTip!.Content = $"X : {mSnapPt.X:F2}  Y : {mSnapPt.Y:F2}";
+         mToolTip.IsOpen = true;
+         ToolTipService.SetPlacement (this, System.Windows.Controls.Primitives.PlacementMode.Mouse);
+      } else mToolTip!.IsOpen = false;
       if (mCords != null) mCords.Text = $"X : {double.Round (mMousePt.X, 2)}  Y : {double.Round (mMousePt.Y, 2)}"; // To display the current mouse point
       InvalidateVisual ();
    }
@@ -149,6 +155,7 @@ internal sealed class Viewport : Canvas {
    Pen? mBGPen, mBLPen, mPLPen; // Pen for Background, BendLine, PLine
    List<Point2>? mSnapSource; // vertices of the plines and bend lines to set the snap point on mouse move
    TextBlock? mCords;
+   ToolTip? mToolTip;
    Part? mPart;
    ProcessedPart? mProcessedPart;
    List<Line>? mLines;

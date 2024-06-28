@@ -31,7 +31,7 @@ public readonly record struct Point2 (double X, double Y, int Index = -1) {
       if (neighbours is null || neighbours.Count () is 0) return false;
       var hasNeighbour = false;
       foreach (var pt in neighbours)
-         if (pt.DistanceTo (this).IsEqual (proximity)) { hasNeighbour = true; neighbour = pt; break; }
+         if (pt.DistanceTo (this) < proximity || pt.DistanceTo (this).IsEqual (proximity)) { hasNeighbour = true; neighbour = pt; break; }
       return hasNeighbour;
    }
 
