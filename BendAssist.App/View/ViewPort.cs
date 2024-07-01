@@ -4,6 +4,7 @@ using System.Windows.Media;
 using System.Windows.Controls;
 using BendAssist.App.Model;
 using BendAssist.App.Utils;
+using static System.Windows.Controls.ToolTipService;
 
 namespace BendAssist.App.View;
 
@@ -57,10 +58,9 @@ internal sealed class Viewport : Canvas {
    #region Implementation -------------------------------------------
    // Populates the snap source with the vertices of the plines and bend lines
    void LoadSnapSource () {
-      if (mPart is null || mProcessedPart is null) return;
       mSnapSource ??= [];
-      mSnapSource.AddRange (mPart.Vertices);
-      mSnapSource.AddRange (mProcessedPart.Vertices);
+      mSnapSource.AddRange (mPart!.Vertices);
+      if (mProcessedPart != null) mSnapSource.AddRange (mProcessedPart.Vertices);
    }
 
    // Initializes the rendering objects and attaches the mouse events
@@ -84,23 +84,32 @@ internal sealed class Viewport : Canvas {
       #region Attaching Events ------------------
       MouseMove += OnMouseMove;
       MouseWheel += OnMouseWheel;
+      MouseEnter += (s, e) => Cursor = Cursors.Cross;
+      MouseLeave += (s, e) => Cursor = Cursors.Arrow;
       SizeChanged += (s, e) => ZoomExtents ();
       #endregion
 
       mCords = new TextBlock () { Background = Brushes.Transparent };
+      mToolTip = new ToolTip ();
       var menu = new ContextMenu ();
       var zoomExtnd = new MenuItem () { Header = "Zoom Extents" };
       zoomExtnd.Click += (s, e) => ZoomExtents ();
       menu.Items.Add (zoomExtnd);
       ContextMenu = menu;
+      SetToolTip (this, mToolTip);
       Children.Add (mCords);
    }
 
    // Udpates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
-      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt))
+      if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
          mSnapPt = mMousePt = pt;
+         // Tool tip for snap points
+         mToolTip!.Content = $"X : {mSnapPt.X:F2}  Y : {mSnapPt.Y:F2}";
+         mToolTip.IsOpen = true;
+         ToolTipService.SetPlacement (this, System.Windows.Controls.Primitives.PlacementMode.Mouse);
+      } else mToolTip!.IsOpen = false;
       if (mCords != null) mCords.Text = $"X : {double.Round (mMousePt.X, 2)}  Y : {double.Round (mMousePt.Y, 2)}"; // To display the current mouse point
       InvalidateVisual ();
    }
@@ -115,8 +124,9 @@ internal sealed class Viewport : Canvas {
 
    // Updates the bound of drawn entities using projection transform
    void UpdateBound () {
-      List<Point2> boundPts = mPart != null ? mPart.Vertices : [];
+      List<Point2> boundPts = [];
       var vec = new Vector2 (mPart!.Bound.MaxX * 1.25, 0.0);
+      if (mPart != null) boundPts.AddRange (mPart.Vertices);
       if (mProcessedPart != null) boundPts.AddRange (mProcessedPart.Vertices.Select (v => v + vec));
       if (boundPts.Count > 2) UpdatePXfm (new Bound2 (boundPts));
    }
@@ -149,6 +159,7 @@ internal sealed class Viewport : Canvas {
    Pen? mBGPen, mBLPen, mPLPen; // Pen for Background, BendLine, PLine
    List<Point2>? mSnapSource; // vertices of the plines and bend lines to set the snap point on mouse move
    TextBlock? mCords;
+   ToolTip? mToolTip;
    Part? mPart;
    ProcessedPart? mProcessedPart;
    List<Line>? mLines;
