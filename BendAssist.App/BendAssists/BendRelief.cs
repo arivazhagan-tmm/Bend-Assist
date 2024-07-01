@@ -6,7 +6,7 @@ namespace BendAssist.App.BendAssists;
 #region class BendRelief --------------------------------------------------------------------------
 public sealed class BendRelief : BendAssist {
    #region Constructors --------------------------------------------
-   public BendRelief (Part part) => (mPart, mPLines) = (part, part.PLines);
+   public BendRelief (Part part) => mPart = part;
    #endregion
 
    #region Methods -------------------------------------------------
@@ -18,36 +18,30 @@ public sealed class BendRelief : BendAssist {
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
       if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) return;
-      mCommonVertices = mPart.Vertices.GroupBy (p => p).Where (p => p.Count () == 2).Select (g => g.Key)
-                        .Where (x => x.IsWithinBound (mPart.Bound)).ToList ();
-      mProcessedPart = ApplyBendRelief (mPart);
-   }
-   #endregion
-
-   #region Implementation ------------------------------------------
-   /// <summary>Method which creates a new processed part after craeting bend relief</summary>
-   ProcessedPart ApplyBendRelief (Part part) {
-      List<PLine> pLines = [.. mPLines];
+      mCommonVertices = [..mPart.Vertices.GroupBy (p => p).Where (p => p.Count () == 2).Select (g => g.Key)
+                       .Where (x => x.IsWithinBound (mPart.Bound))];
+      if (mCommonVertices is null) return;
+      List<PLine> pLines = [.. mPart.PLines];
       foreach (var vertex in mCommonVertices) {
-         foreach (var bl in part.BendLines) {
-            if (bl.HasVertex (vertex)) {
-               if (bl.Orientation is EOrientation.Inclined) return null!;
-               bool isHorizontal = bl.Orientation == EOrientation.Horizontal;
-               Point2 p1 = vertex, p2, p3, p4;
-               (float blAngle, float radius, float deduction) = bl.BLInfo;
-               double brHeight = BendUtils.GetBendAllowance ((double)blAngle, 0.38, part.Thickness, radius) / 2;
-               double brWidth = part.Thickness / 2;
+         foreach (var bl in mPart.BendLines) {
+            if (bl.HasVertex (vertex) && bl.Orientation is not EOrientation.Inclined) {
                List<PLine>? connectedLines = [.. pLines.Where (x => x.HasVertex (vertex)).Where (x => x.Orientation == bl.Orientation)];
-               PLine? nearBaseEdge = connectedLines.Count > 0 ? connectedLines.First () : null;
-               if (nearBaseEdge is null) return null!;
+               if (connectedLines.Count is 0) return;
+               PLine nearBaseEdge = connectedLines.First (); //Get the near base edge where relief edges will be inserted
+               bool isHorizontal = bl.Orientation == EOrientation.Horizontal;
+               Point2 p1 = vertex, p2, p3, p4, center = mPart.Centroid;
+               (float blAngle, float radius, float deduction) = bl.BLInfo;
+               //calculating the benrelief height from bend allownace or flat width
+               double brHeight = BendUtils.GetBendAllowance ((double)blAngle, 0.38, mPart.Thickness, radius) / 2;
+               double brWidth = mPart.Thickness / 2; //calculating benrelief width from part thickness 
                double angle = bl.Angle, translateAngle1, translateAngle2;
                angle = angle switch { 180 => 0, 270 => 90, _ => bl.Angle, };
                if (isHorizontal) {
-                  translateAngle1 = vertex.Y > part.Centroid.Y ? angle + 270 : angle + 90;
-                  translateAngle2 = vertex.X < part.Centroid.X ? angle + 180 : angle;
+                  translateAngle1 = vertex.Y > center.Y ? angle + 270 : angle + 90;
+                  translateAngle2 = vertex.X < center.X ? angle + 180 : angle;
                } else {
-                  translateAngle1 = vertex.X < part.Centroid.X ? angle - 90 : angle + 90;
-                  translateAngle2 = vertex.Y < part.Centroid.Y ? angle + 180 : angle;
+                  translateAngle1 = vertex.X < center.X ? angle - 90 : angle + 90;
+                  translateAngle2 = vertex.Y < center.Y ? angle + 180 : angle;
                }
                p2 = vertex.RadialMove (brHeight, translateAngle1);
                p3 = p2.RadialMove (brWidth, translateAngle2);
@@ -60,9 +54,11 @@ public sealed class BendRelief : BendAssist {
             }
          }
       }
-      return new ProcessedPart (pLines, part.BendLines, (float)part.Thickness, EBendAssist.BendRelief);
+      mProcessedPart = new ProcessedPart (pLines, mPart.BendLines, (float)mPart.Thickness, EBendAssist.BendRelief);
    }
+   #endregion
 
+   #region Implementation ------------------------------------------
    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
    Point2 FindIntersectPoint (PLine pLine, Point2 p, double angle) {
       Point2 p1 = p.RadialMove (1, angle);
@@ -79,8 +75,7 @@ public sealed class BendRelief : BendAssist {
    #endregion
 
    #region Private --------------------------------------------------
-   readonly List<PLine> mPLines;
-   List<Point2> mCommonVertices = [];
+   List<Point2>? mCommonVertices = [];
    #endregion
 }
 #endregion
