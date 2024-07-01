@@ -17,14 +17,12 @@ public sealed class BendRelief : BendAssist {
 
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
-      if (mPart != null && mPart.BendLines.Count != 0) {
-         mCommonVertices = mPart.Vertices.GroupBy (p => p).Where (p => p.Count () > 1).Select (g => g.Key)
-                           .Where (x => x.IsWithinBound (mPart.Bound)).ToList ();
-         mHLines = mPLines.Where (x => x.Orientation == EOrientation.Horizontal).ToList ();
-         mVLines = mPLines.Where (x => x.Orientation == EOrientation.Vertical).ToList ();
-         ApplyBendRelief (mPart);
-      }
-      return;
+      if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) return;
+      mCommonVertices = mPart.Vertices.GroupBy (p => p).Where (p => p.Count () > 1).Select (g => g.Key)
+                        .Where (x => x.IsWithinBound (mPart.Bound)).ToList ();
+      mHLines = mPLines.Where (x => x.Orientation == EOrientation.Horizontal).ToList ();
+      mVLines = mPLines.Where (x => x.Orientation == EOrientation.Vertical).ToList ();
+      ApplyBendRelief (mPart);
    }
    #endregion
 
@@ -37,18 +35,13 @@ public sealed class BendRelief : BendAssist {
             if (bl.HasVertex (vertex)) {
                bool isHorizontal = bl.Orientation == EOrientation.Horizontal;
                Point2 p1 = vertex, p2, p3, p4;
-               PLine nearAlignedLine = null!;
                (float blAngle, float radius, float deduction) = bl.BLInfo;
                double brHeight = BendUtils.GetBendAllowance ((double)blAngle, 0.38, part.Thickness, radius) / 2;
                double brWidth = part.Thickness / 2;
-               PLine? parallelLine = GetNearestParallelLine (bl.Orientation == EOrientation.Horizontal ? mHLines : mVLines, bl);
-               if (parallelLine != null) nearAlignedLine = parallelLine;
+               PLine? nearAlignedLine = GetNearestParallelLine (bl.Orientation == EOrientation.Horizontal ? mHLines : mVLines, bl);
+               if (nearAlignedLine is null) return null!;
                double angle = bl.Angle, translateAngle1, translateAngle2;
-               angle = angle switch {
-                  180 => 0,
-                  270 => 90,
-                  _ => bl.Angle,
-               };
+               angle = angle switch { 180 => 0, 270 => 90, _ => bl.Angle, };
                if (isHorizontal) {
                   translateAngle1 = vertex.Y > part.Centroid.Y ? angle + 270 : angle + 90;
                   translateAngle2 = vertex.X < part.Centroid.X ? angle + 180 : angle;
@@ -58,14 +51,11 @@ public sealed class BendRelief : BendAssist {
                }
                p2 = vertex.RadialMove (brHeight, translateAngle1);
                p3 = p2.RadialMove (brWidth, translateAngle2);
-               p4 = FindIntersectPoint (nearAlignedLine, p3, 180 - translateAngle1);
-               var reliefLines = new PLine[4];
-               reliefLines[0] = new PLine (p1, p2);
-               reliefLines[1] = new (p2, p3);
-               reliefLines[2] = new PLine (p3, p4);
-               reliefLines[3] = new (p4, vertex == nearAlignedLine.StartPoint ? nearAlignedLine.EndPoint : nearAlignedLine.StartPoint);
-               for (int i = 0; i < 4; i++)
-                  pLines.Add (reliefLines[i]);
+               p4 = FindIntersectPoint (nearAlignedLine, p3, translateAngle1);
+               pLines.Add (new PLine (p1, p2));
+               pLines.Add (new (p2, p3));
+               pLines.Add (new PLine (p3, p4));
+               pLines.Add (new (p4, vertex == nearAlignedLine.StartPoint ? nearAlignedLine.EndPoint : nearAlignedLine.StartPoint));
                pLines.Remove (nearAlignedLine);
             }
          }
@@ -80,13 +70,14 @@ public sealed class BendRelief : BendAssist {
 
    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
    Point2 FindIntersectPoint (PLine pLine, Point2 p, double angle) {
-      Point2 p1 = p.Translate (new Vector2 (1 * (Math.Sin (angle.ToRadians ())), 1 * (Math.Cos (angle.ToRadians ()))));
-      double slope1 = (p1.Y - p.Y) / (p1.X - p.X), slope2 = (pLine.EndPoint.Y - pLine.StartPoint.Y) / (pLine.EndPoint.X - pLine.StartPoint.X);
-      double intercept1 = p.Y - slope1 * (p.X), intercept2 = pLine.StartPoint.Y - slope2 * (pLine.StartPoint.X);
+      Point2 p1 = p.RadialMove (1, angle);
+      double startX = pLine.StartPoint.X, startY = pLine.StartPoint.Y, endX = pLine.EndPoint.X, endY = pLine.EndPoint.Y;
+      double slope1 = (p1.Y - p.Y) / (p1.X - p.X), slope2 = (endY - startY) / (endX - startX);
+      double intercept1 = p.Y - slope1 * p.X, intercept2 = startY - slope2 * startX;
       double commonX = intercept2 - intercept1 / slope1 - slope2;
       return (slope1, slope2) switch {
-         (0, 0) => new Point2 (p.X, pLine.StartPoint.Y),
-         (double.NegativeInfinity or double.PositiveInfinity, double.NegativeInfinity or double.PositiveInfinity) => new Point2 (pLine.StartPoint.X, p.Y),
+         (double.NegativeInfinity or double.PositiveInfinity, 0) => new Point2 (p.X, startY),
+         (0, double.NegativeInfinity or double.PositiveInfinity) => new Point2 (startX, p.Y),
          _ => new Point2 (commonX, slope1 * commonX + intercept1)
       };
    }
