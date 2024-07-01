@@ -2,6 +2,7 @@
 using BendAssist.App.FileHandling;
 using BendAssist.App.Model;
 using BendAssist.App.View;
+using BendAssist.App.Utils;
 using Microsoft.Win32;
 using System.IO;
 using System.Windows;
@@ -17,23 +18,23 @@ namespace BendAssist.App;
 /// Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class MainWindow : Window {
-   #region Constructors ---------------------------------------------
-   public MainWindow () {
-      InitializeComponent ();
-      (Height, Width) = (750, 900);
-      WindowStartupLocation = WindowStartupLocation.CenterScreen;
-      WindowState = WindowState.Maximized;
-      WindowStyle = WindowStyle.SingleBorderWindow;
-      Loaded += OnLoaded;
-   }
-   #endregion
+    #region Constructors ---------------------------------------------
+    public MainWindow () {
+        InitializeComponent ();
+        (Height, Width) = (750, 900);
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        WindowState = WindowState.Maximized;
+        WindowStyle = WindowStyle.SingleBorderWindow;
+        Loaded += OnLoaded;
+    }
+    #endregion
 
-   #region Properties -----------------------------------------------
-   public static MainWindow? It;
-   #endregion
+    #region Properties -----------------------------------------------
+    public static MainWindow? It;
+    #endregion
 
-   #region Methods --------------------------------------------------
-   #endregion
+    #region Methods --------------------------------------------------
+    #endregion
 
    #region Implementation -------------------------------------------
    void OnLoaded (object sender, RoutedEventArgs e) {
@@ -67,14 +68,20 @@ public partial class MainWindow : Window {
       #endregion
       var menu = new Menu ();
       var fileMenu = new MenuItem () { Style = menuStyle, Header = "_File" };
-      var saveMenu = new MenuItem () { Header = "_Export...", IsEnabled = false };
+      var saveMenu = new MenuItem () { Header = "_Export..." };
       var btnGrid = new UniformGrid () { Columns = 2 }; // Displays bend assist options
-      var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of part imported
+      var infoGrid = new UniformGrid () { Rows = 3, Columns = 2 }; // Displays info of imported file
       var optionPanel = new StackPanel () { Margin = new Thickness (0, 20, 0, 0) };
       saveMenu.Click += (s, e) => {
-         var currentFileName = "";
+         if (mPart == null) return;
+         var currentFileName = mPart.FilePath;
          var dlg = new SaveFileDialog () { FileName = $"{Path.GetFileNameWithoutExtension (currentFileName)}_BendProfile", Filter = "GEO|*.geo" };
-         if (dlg.ShowDialog () is true) { }
+         if (dlg.ShowDialog () is true) {
+            if (mBendAssist != null && mBendAssist.ProcessedPart != null) {
+               var writer = new GeoWriter (mBendAssist.ProcessedPart, currentFileName!);
+               writer.WriteToGeo (dlg.FileName);
+            }
+         }
       };
       var openMenu = new MenuItem () { Header = "_Import...", IsEnabled = true };
       openMenu.Click += (s, e) => {
@@ -92,73 +99,73 @@ public partial class MainWindow : Window {
             string[] infoboxvalue = [$"{Path.GetFileNameWithoutExtension (fileName)}{Path.GetExtension (fileName)}",
                                          $"{mPart.Bound.Width:F2} X {mPart.Bound.Height:F2}",
                                          $"{mPart.BendLines.Count}"];
-            infoGrid.Children.Clear ();
-            for (int i = 0; i < infobox.Length; i++) {
-               infoGrid.Children.Add (new Label () { Content = infobox[i], Margin = new Thickness (5, 5, 0, 0) });
-               infoGrid.Children.Add (new TextBlock () { Text = infoboxvalue[i], Style = tbStyle });
+                infoGrid.Children.Clear ();
+                for (int i = 0; i < infobox.Length; i++) {
+                    infoGrid.Children.Add (new Label () { Content = infobox[i], Margin = new Thickness (5, 5, 0, 0) });
+                    infoGrid.Children.Add (new TextBlock () { Text = infoboxvalue[i], Style = tbStyle });
+                }
+                if (!optionPanel.Children.Contains (infoGrid))
+                    optionPanel.Children.Add (infoGrid);
             }
-            if (!optionPanel.Children.Contains (infoGrid))
-               optionPanel.Children.Add (infoGrid);
-         }
-      };
-      foreach (var option in Enum.GetValues (typeof (EBendAssist))) {
-         var btn = new Button () {
-            Content = option,
-            Tag = option,
-            Style = btnStyle,
-         };
-         btn.Click += OnOptionClicked;
-         btnGrid.Children.Add (btn);
-      }
-      optionPanel.Children.Add (btnGrid);
-      fileMenu.Items.Add (openMenu);
-      fileMenu.Items.Add (saveMenu);
-      menu.Items.Add (fileMenu);
-      menuPanel.Children.Add (menu);
-      var dp = new DockPanel ();
-      mViewport = new Viewport ();
-      dp.Children.Add (menuPanel);
-      dp.Children.Add (optionPanel);
-      dp.Children.Add (mViewport);
-      DockPanel.SetDock (menuPanel, Dock.Top);
-      DockPanel.SetDock (mViewport, Dock.Right);
-      DockPanel.SetDock (optionPanel, Dock.Left);
-      mMainPanel.Content = dp;
-      Background = Brushes.WhiteSmoke;
-   }
+        };
+        foreach (var option in Enum.GetNames (typeof (EBendAssist))) {
+            var btn = new Button () {
+                Content = CommonUtils.AddSpace (option),
+                Tag = option,
+                Style = btnStyle,
+            };
+            btn.Click += OnOptionClicked;
+            btnGrid.Children.Add (btn);
+        }
+        optionPanel.Children.Add (btnGrid);
+        fileMenu.Items.Add (openMenu);
+        fileMenu.Items.Add (saveMenu);
+        menu.Items.Add (fileMenu);
+        menuPanel.Children.Add (menu);
+        var dp = new DockPanel ();
+        mViewport = new Viewport ();
+        dp.Children.Add (menuPanel);
+        dp.Children.Add (optionPanel);
+        dp.Children.Add (mViewport);
+        DockPanel.SetDock (menuPanel, Dock.Top);
+        DockPanel.SetDock (mViewport, Dock.Right);
+        DockPanel.SetDock (optionPanel, Dock.Left);
+        mMainPanel.Content = dp;
+        Background = Brushes.WhiteSmoke;
+    }
 
-   // Handles the button click events
-   void OnOptionClicked (object sender, RoutedEventArgs e) {
-      if (sender is not Button btn || mPart is null || mViewport is null) return;
-      if (!Enum.TryParse ($"{btn.Tag}", out EBendAssist opt)) return;
-      switch (opt) {
-         case EBendAssist.BendDeduction:
-            mBendAssist = new BendDeduction (mPart, EBDAlgorithm.EquallyDistributed);
-            break;
-         case EBendAssist.BendRelief:
-            mBendAssist = new BendRelief (mPart);
-            break;
-         case EBendAssist.CornerClose:
-            mBendAssist = new CornerClose (mPart);
-            break;
-         case EBendAssist.CornerRelief:
-            mBendAssist = new CornerRelief (mPart);
-            break;
-         case EBendAssist.AddFlange:
-            mBendAssist = new MakeFlange (mPart);
-            break;
-      }
-      if (mBendAssist != null) {
-         mBendAssist.Execute ();
-         mViewport.UpdateViewport (mBendAssist.ProcessedPart!); // Displays the processed part
-         mViewport.ZoomExtents ();
-      }
-   }
-   #endregion
+    // Handles the button click events
+    void OnOptionClicked (object sender, RoutedEventArgs e) {
+        if (sender is not Button btn || mPart is null || mViewport is null) return;
+        if (!Enum.TryParse ($"{btn.Tag}", out EBendAssist opt)) return;
+        switch (opt) {
+            case EBendAssist.BendDeduction:
+                mBendAssist = new BendDeduction (mPart, EBDAlgorithm.EquallyDistributed);
+                break;
+            case EBendAssist.BendRelief:
+                mBendAssist = new BendRelief (mPart);
+                break;
+            case EBendAssist.CornerClose:
+                mBendAssist = new CornerClose (mPart);
+                break;
+            case EBendAssist.CornerRelief:
+                mBendAssist = new CornerRelief (mPart);
+                break;
+            case EBendAssist.AddFlange:
+                mBendAssist = new MakeFlange (mPart);
+                break;
+        }
+        if (mBendAssist != null) {
+            mBendAssist.Execute ();
+            mViewport.UpdateViewport (mBendAssist.ProcessedPart!); // Displays the processed part
+            mViewport.ZoomExtents ();
+        }
+    }
+    #endregion
 
-   #region Private Data ---------------------------------------------
-   Viewport? mViewport;
-   Part? mPart;
-   BendAssists.BendAssist? mBendAssist; // Current bend assist process
-   #endregion
+    #region Private Data ---------------------------------------------
+    Viewport? mViewport;
+    Part? mPart;
+    BendAssists.BendAssist? mBendAssist; // Current bend assist process
+    #endregion
 }

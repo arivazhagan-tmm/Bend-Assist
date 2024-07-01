@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Media;
 using BendAssist.App.Model;
+using System.Text.RegularExpressions;
 
 namespace BendAssist.App.Utils;
 
@@ -129,11 +130,17 @@ public static class CommonUtils {
 
    /// <summary>Converts the given angle in radians to degrees</summary>
    public static double ToDegrees (this double theta) => theta / sFactor;
-   #endregion
 
-   #region Private Data ---------------------------------------------
-   // Factor useful for converting radians to degrees and vice versa
-   static double sFactor = Math.PI / 180;
+    /// <summary>Add space between words</summary>
+    public static string AddSpace (this string str) {
+        var result = Regex.Split (str, @"(?=[A-Z])");
+        return string.Join (" ", result);
+    }
+    #endregion
+
+    #region Private Data ---------------------------------------------
+    // Factor useful for converting radians to degrees and vice versa
+    static double sFactor = Math.PI / 180;
    #endregion
 }
 #endregion

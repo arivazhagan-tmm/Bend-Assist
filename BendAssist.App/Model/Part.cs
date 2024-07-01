@@ -20,10 +20,9 @@ public class Part {
    #region Methods --------------------------------------------------
    public Part ReBuild () {
       List<PLine> plines = []; List<BendLine> blines = [];
-      var index = 0;
+      var index = 1;
       foreach (var l in PLines.OrderBy (l => l.Index))
-         plines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index));
-      index = 0;
+         plines.Add (new (l.StartPoint.Duplicate (index), l.EndPoint.Duplicate (index++), l.Index));
       foreach (var l in BendLines.OrderBy (l => l.Index))
          blines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index, l.BLInfo));
       return new Part (plines, blines);
