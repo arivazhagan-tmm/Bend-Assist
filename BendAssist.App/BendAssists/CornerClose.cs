@@ -10,6 +10,10 @@ public sealed class CornerClose : BendAssist {
    public CornerClose (Part part) => (mPart, mIndex, mStepLines, mEdgeLines, mNewLines, mStepStartPts, mStepEndPts) = (part, -1, [], [], [], [], []);
    #endregion
 
+   #region Properties -----------------------------------------------
+   public override string[] Prompts => ["Select the extruding line", "Select the intruding line"];
+   #endregion
+
    #region Methods --------------------------------------------------
    public override bool Assisted () {
       return true;
@@ -42,22 +46,22 @@ public sealed class CornerClose : BendAssist {
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, halfBD, 0, lineShift) : (PLine)pLine.Trimmed (0, -halfBD, 0, -lineShift),
                      _ => null!
                   };
-                  mNewLines.Insert (++mIndex, trimmedEdge);
+                  mNewLines.Add (new PLine (trimmedEdge.StartPoint, trimmedEdge.EndPoint, ++mIndex));
                } else if (mStepStartPts.Contains (pLine.EndPoint)) {
                   trimmedEdge = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Trimmed (0, 0, -lineShift, 0) : (PLine)pLine.Trimmed (0, 0, lineShift, 0),
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, 0, 0, lineShift) : (PLine)pLine.Trimmed (0, 0, 0, -lineShift),
                      _ => null!
                   };
-                  mNewLines.Insert (++mIndex, trimmedEdge);
+                  mNewLines.Add (new PLine (trimmedEdge.StartPoint, trimmedEdge.EndPoint, ++mIndex));
                } else if (mStepEndPts.Contains (pLine.StartPoint)) {
                   trimmedEdge = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.Y < mPart.Centroid.Y ? (PLine)pLine.Trimmed (-halfBD, 0, 0, 0) : (PLine)pLine.Trimmed (halfBD, 0, 0, 0),
                      Vertical => pLine.StartPoint.X < mPart.Centroid.X ? (PLine)pLine.Trimmed (0, halfBD, 0, 0) : (PLine)pLine.Trimmed (0, -halfBD, 0, 0),
                      _ => null!
                   };
-                  mNewLines.Insert (++mIndex, trimmedEdge);
-               } else mNewLines.Insert (++mIndex, pLine);
+                  mNewLines.Add (new PLine (trimmedEdge.StartPoint, trimmedEdge.EndPoint, ++mIndex));
+               } else mNewLines.Add (new PLine (pLine.StartPoint, pLine.EndPoint, ++mIndex));
             } else {
                if (mStepLines.IndexOf (pLine) % 2 == 0) {
                   PLine translatedLine = pLine.Orientation switch {
@@ -65,7 +69,7 @@ public sealed class CornerClose : BendAssist {
                      Vertical => pLine.EndPoint.X < mPart.Centroid.X ? (PLine)pLine.Translated (lineShift, 0) : (PLine)pLine.Translated (-lineShift, 0),
                      _ => null!
                   };
-                  mNewLines.Insert (++mIndex, translatedLine);
+                  mNewLines.Add (new PLine (translatedLine.StartPoint, translatedLine.EndPoint, ++mIndex));
                } else {
                   (PLine extrudedLine, PLine trimmedLine) = pLine.Orientation switch {
                      Horizontal => pLine.StartPoint.X < mPart.Centroid.X ? ((PLine)pLine.Trimmed (-halfBA, 0, 0, 0).Translated (0, halfBD), (PLine)pLine.Trimmed (lineShift, 0, pLine.Length - halfBA, 0))
@@ -74,9 +78,9 @@ public sealed class CornerClose : BendAssist {
                                                                       : ((PLine)pLine.Trimmed (0, halfBA, 0, 0).Translated (halfBD, 0), (PLine)pLine.Trimmed (0, -lineShift, 0, -(pLine.Length - halfBA))),
                      _ => (null!, null!)
                   };
-                  mNewLines.Insert (++mIndex, trimmedLine);
+                  mNewLines.Add (new PLine (trimmedLine.StartPoint, trimmedLine.EndPoint, ++mIndex));
                   mNewLines.Add (new PLine (trimmedLine.EndPoint, extrudedLine.StartPoint, ++mIndex));
-                  mNewLines.Insert (++mIndex, extrudedLine);
+                  mNewLines.Add (new PLine (extrudedLine.StartPoint, extrudedLine.EndPoint, ++mIndex));
                }
             }
          }
