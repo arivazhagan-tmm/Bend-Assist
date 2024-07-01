@@ -39,10 +39,12 @@ public sealed class BendDeduction : BendAssist {
          }
       } else { // Equally distributed algorithm - Handles horizontal and vertical bend lines
          var bendLines = mPart?.BendLines;
+         // Algorithm works only for horizontal and vertical bend lines for now.
+         if (!(bendLines!.All (bl => bl.Orientation is EOrientation.Horizontal) || bendLines!.All (bl => bl.Orientation is EOrientation.Vertical))) return;
          var blCount = bendLines!.Count;
          // The area between the two innermost bend lines is considered the base.
          var bottomBLines = bendLines.Take (blCount / 2).Reverse ().ToList (); // Bend lines on the bottom and left side of the base
-         var topBLines = bendLines.TakeLast (blCount - bottomBLines.Count).Reverse ().ToList (); // Bend lines on the top and right side of the base
+         var topBLines = bendLines.TakeLast (blCount - bottomBLines.Count).ToList (); // Bend lines on the top and right side of the base
          var tempPLines = new List<PLine> ();
          // Applies bend deduction from the top and right side of the part
          ApplyEqDistributedBD (ref newBendLines, topBLines, ref tempPLines, ref newPLines, ELoc.Top);
