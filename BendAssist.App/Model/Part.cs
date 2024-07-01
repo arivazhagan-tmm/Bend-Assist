@@ -7,6 +7,7 @@ public class Part {
    #region Constructors ---------------------------------------------
    public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 0.0f) {
       (PLines, BendLines) = (plines, bendLines);
+      BendLines = bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X).ToList ();
       Vertices = [];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
       BendLines.ForEach (l => Vertices.AddRange ([l.StartPoint, l.EndPoint]));
