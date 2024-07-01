@@ -97,6 +97,9 @@ public static class BendUtils {
       return connectedLines.Count > 1;
    }
 
+   /// <summary>Checks whether a point is within the bound</summary>
+   public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X < b.MaxX && p.X > b.MinX && p.Y < b.MaxY && p.Y > b.MinY;
+
    /// <summary>Applies transformation on point p and returns as Point2</summary>
    public static Point2 Transform (this Point p, Matrix xfm) {
       var pt = xfm.Transform (p);
