@@ -48,7 +48,7 @@ public sealed class BendRelief : BendAssist {
                pLines.Add (new (p1, p2));
                pLines.Add (new (p2, p3));
                pLines.Add (new (p3, p4));
-               pLines.Add (new (p4, vertex == nearBaseEdge.StartPoint ? nearBaseEdge.EndPoint : nearBaseEdge.StartPoint));
+               pLines.Add (new (p4, vertex.AreEqual (nearBaseEdge.StartPoint) ? nearBaseEdge.EndPoint : nearBaseEdge.StartPoint));
                pLines.Remove (nearBaseEdge);
             }
          }
