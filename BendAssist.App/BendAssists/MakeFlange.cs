@@ -11,7 +11,7 @@ public sealed class MakeFlange : BendAssist {
        (mPart, mPline, mBendAngle, mHeight, mRadius) = (part, pline, angle, height, radius);
 
    /// <summary>Gets the part</summary>
-   public MakeFlange (Part part) { }
+   public MakeFlange (Part part) => mPart = part;
    #endregion
 
    #region Methods --------------------------------------------------
@@ -19,44 +19,43 @@ public sealed class MakeFlange : BendAssist {
 
    /// <summary>Adds a new flange with the specified height, angle and radius.</summary>
    /// Translates the selected pline to the given height
-   /// and creates a bendline with the given angle.
+   /// and creates a bend line with the given angle.
    public override void Execute () {
+      if (mPart == null) return;
+      int index = 1;
       List<PLine> pLines = []; List<BendLine> bendLines = [];
-      var (startPt, endPt) = (mPline!.StartPoint, mPline.EndPoint);
-
-      // Adds 90 degree to radially move the point
-      var angle = CommonUtils.ToRadians (mPline.Angle - 90);
-      var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, 2, mRadius);
-
-      // Gets the bend deducted height of the flange
-      mHeight -= bendDeduction / 2;
-
-      // Calculates the offsets in x and y
-      var (dx, dy) = (mHeight * Math.Cos (angle), mHeight * Math.Sin (angle));
-
-      // Translates the line with the offset values
-      var translatedLine = (PLine)mPline.Translated (dx, dy);
-      pLines?.Add (translatedLine);
-
-      // Get the lines from the part except the selected line
-      var lines = mPart!.PLines.Where (x => x.Index != mPline.Index).ToList ();
-      foreach (var pline in lines!) {
-         pLines?.Add (new PLine (mPline.StartPoint, translatedLine.StartPoint));
-         pLines?.Add (new PLine (translatedLine.EndPoint, mPline.EndPoint));
-         pLines?.Add (pline);
-      }
-      // Bendline is created at the previous position of the selected pline
       foreach (var bendline in mPart.BendLines) bendLines?.Add (bendline);
-      bendLines?.Add (new BendLine (startPt, endPt, mPart.BendLines.Count - 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
-      if (pLines != null && bendLines != null) mProcessedPart = new (pLines, bendLines, mRadius, EBendAssist.AddFlange);
+      foreach (var pline in mPart.PLines) {
+         var (startPt, endPt) = (pline.StartPoint, pline.EndPoint);
+
+         // Radially moves the point perpendicular to the selected pline
+         var angle = CommonUtils.ToRadians (pline.Angle - 90);
+         var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, 2, mRadius);
+         mHeight -= bendDeduction / 2; // Gets the bend deducted height of the flange
+
+         // Calculates the offsets in x and y
+         var (dx, dy) = (mHeight * Math.Cos (angle), mHeight * Math.Sin (angle));
+
+         // Translates the line with the offset values
+         var translatedLine = (PLine)pline.Translated (dx, dy);
+
+         pLines?.Add (new PLine (pline.StartPoint, translatedLine.StartPoint, index++));
+         pLines?.Add (new PLine (translatedLine.StartPoint, translatedLine.EndPoint, index++));
+         pLines?.Add (new PLine (translatedLine.EndPoint, pline.EndPoint, index++));
+
+         var count = mPart.BendLines.Count;
+         // Bend line is created at the previous position of the selected pline
+         bendLines?.Add (new BendLine (startPt, endPt, count > 0 ? count - 1 : 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
+         if (pLines != null && bendLines != null) mProcessedPart = new (pLines, bendLines, mRadius, EBendAssist.AddFlange);
+      }
    }
    #endregion
 
    #region Private Data ---------------------------------------------
-   double mHeight;    // Height of the flange
-   readonly float mBendAngle;    // Bend angle of flange
+   double mHeight = 10;    // Height of the flange
+   readonly float mBendAngle = 2;    // Bend angle of flange
    readonly PLine? mPline;    // Selected pline
-   readonly float mRadius;    // Bend radius
+   readonly float mRadius = 2;    // Bend radius
    #endregion
 }
 #endregion
