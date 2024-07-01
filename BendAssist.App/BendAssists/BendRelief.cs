@@ -18,28 +18,28 @@ public sealed class BendRelief : BendAssist {
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
       if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) return;
-      mCommonVertices = mPart.Vertices.GroupBy (p => p).Where (p => p.Count () > 1).Select (g => g.Key)
+      mCommonVertices = mPart.Vertices.GroupBy (p => p).Where (p => p.Count () == 2).Select (g => g.Key)
                         .Where (x => x.IsWithinBound (mPart.Bound)).ToList ();
-      mHLines = mPLines.Where (x => x.Orientation == EOrientation.Horizontal).ToList ();
-      mVLines = mPLines.Where (x => x.Orientation == EOrientation.Vertical).ToList ();
-      ApplyBendRelief (mPart);
+      mProcessedPart = ApplyBendRelief (mPart);
    }
    #endregion
 
    #region Implementation ------------------------------------------
    /// <summary>Method which creates a new processed part after craeting bend relief</summary>
    ProcessedPart ApplyBendRelief (Part part) {
-      List<PLine> pLines = mPLines;
+      List<PLine> pLines = [.. mPLines];
       foreach (var vertex in mCommonVertices) {
          foreach (var bl in part.BendLines) {
             if (bl.HasVertex (vertex)) {
+               if (bl.Orientation is EOrientation.Inclined) return null!;
                bool isHorizontal = bl.Orientation == EOrientation.Horizontal;
                Point2 p1 = vertex, p2, p3, p4;
                (float blAngle, float radius, float deduction) = bl.BLInfo;
                double brHeight = BendUtils.GetBendAllowance ((double)blAngle, 0.38, part.Thickness, radius) / 2;
                double brWidth = part.Thickness / 2;
-               PLine? nearAlignedLine = GetNearestParallelLine (bl.Orientation == EOrientation.Horizontal ? mHLines : mVLines, bl);
-               if (nearAlignedLine is null) return null!;
+               List<PLine>? connectedLines = [.. pLines.Where (x => x.HasVertex (vertex)).Where (x => x.Orientation == bl.Orientation)];
+               PLine? nearBaseEdge = connectedLines.Count > 0 ? connectedLines.First () : null;
+               if (nearBaseEdge is null) return null!;
                double angle = bl.Angle, translateAngle1, translateAngle2;
                angle = angle switch { 180 => 0, 270 => 90, _ => bl.Angle, };
                if (isHorizontal) {
@@ -51,22 +51,17 @@ public sealed class BendRelief : BendAssist {
                }
                p2 = vertex.RadialMove (brHeight, translateAngle1);
                p3 = p2.RadialMove (brWidth, translateAngle2);
-               p4 = FindIntersectPoint (nearAlignedLine, p3, translateAngle1);
+               p4 = FindIntersectPoint (nearBaseEdge, p3, translateAngle1);
                pLines.Add (new PLine (p1, p2));
                pLines.Add (new (p2, p3));
                pLines.Add (new PLine (p3, p4));
-               pLines.Add (new (p4, vertex == nearAlignedLine.StartPoint ? nearAlignedLine.EndPoint : nearAlignedLine.StartPoint));
-               pLines.Remove (nearAlignedLine);
+               pLines.Add (new (p4, vertex == nearBaseEdge.StartPoint ? nearBaseEdge.EndPoint : nearBaseEdge.StartPoint));
+               pLines.Remove (nearBaseEdge);
             }
          }
       }
       return new ProcessedPart (pLines, part.BendLines, (float)part.Thickness, EBendAssist.BendRelief);
    }
-
-   /// <summary>Find distance between a line and a bend line</summary>
-   double GetDistanceToLine (PLine pLine, BendLine bLine) =>
-           bLine.Orientation == EOrientation.Horizontal ? Math.Abs (pLine.StartPoint.Y - bLine.StartPoint.Y)
-                                : Math.Abs (pLine.StartPoint.X - bLine.StartPoint.X);
 
    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
    Point2 FindIntersectPoint (PLine pLine, Point2 p, double angle) {
@@ -81,21 +76,11 @@ public sealed class BendRelief : BendAssist {
          _ => new Point2 (commonX, slope1 * commonX + intercept1)
       };
    }
-
-   /// <summary>Find the nearest parallel line to the bendline from the given list of lines</summary>
-   PLine GetNearestParallelLine (List<PLine> pLines, BendLine bLine) {
-      List<PLine> p = [.. pLines.OrderBy (line => GetDistanceToLine (line, bLine))];
-      if (p.Count > 0)
-         return p.First ();
-      return null!;
-   }
    #endregion
 
    #region Private --------------------------------------------------
    readonly List<PLine> mPLines;
    List<Point2> mCommonVertices = [];
-   List<PLine> mHLines = [];
-   List<PLine> mVLines = [];
    #endregion
 }
 #endregion
