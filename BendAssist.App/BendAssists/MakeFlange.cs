@@ -30,14 +30,19 @@ public sealed class MakeFlange : BendAssist {
       List<PLine> pLines = []; List<BendLine> bendLines = [];
       foreach (var bendline in mPart.BendLines) bendLines.Add (bendline);
       foreach (var pline in mPart.PLines) {
+         if (mPart.BendLines.Any (x => x.StartPoint.IsWithinBound (pline.Bound) || x.EndPoint.IsWithinBound (pline.Bound))) {
+            pLines.Add (pline);
+            continue;
+         }
          var (startPt, endPt) = (pline.StartPoint, pline.EndPoint);
          // Radially moves the point perpendicular to the selected pline
          var angle = CommonUtils.ToRadians (pline.Angle - 90);
-         var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, 2, mRadius);
+         var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, mPart.Thickness, mRadius);
          var height = mHeight;
          height -= bendDeduction / 2; // Gets the bend deducted height of the flange
          // Calculates the offsets in x and y
-         var (dx, dy) = (height * Math.Cos (angle), height * Math.Sin (angle));
+         var (sin, cos) = Math.SinCos (angle);
+         var (dx, dy) = (height * cos, height * sin);
          // Translates the line with the offset values
          var translatedLine = (PLine)pline.Translated (dx, dy);
          var (tStart, tEnd) = (translatedLine.StartPoint, translatedLine.EndPoint);
