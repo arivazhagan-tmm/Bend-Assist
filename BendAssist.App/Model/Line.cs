@@ -16,21 +16,28 @@ public abstract class Line : ICloneable {
    #endregion
 
    #region Methods --------------------------------------------------
+   /// <summary>Clones the given line and returns it as a new line</summary>
    public object Clone () => GetLine (mStartPoint, mEndPoint, mIndex);
-   public override string? ToString () => $"{mStartPoint}, {mEndPoint}, [{Index}]";
+
+   /// <summary>Shifts the line by the given dx and dy</summary>
    public virtual Line Translated (double dx, double dy) {
       var v = new Vector2 (dx, dy);
       var (startPt, endPt) = (mStartPoint + v, mEndPoint + v);
       return GetLine (startPt, endPt, mIndex);
    }
-   public virtual Line Trimmed (double startDx, double startDy, double endDx, double endDy) {
+
+   /// <summary>Trims the line with respect to the given offsets</summary>
+   public virtual Line Trimmed (double startDx = 0.0, double startDy = 0.0, double endDx = 0.0, double endDy = 0.0) {
       var (startPt, endPt) = (new Point2 (mStartPoint.X + startDx, mStartPoint.Y + startDy, mStartPoint.Index),
                               new Point2 (mEndPoint.X + endDx, mEndPoint.Y + endDy, mEndPoint.Index));
       return GetLine (startPt, endPt, mIndex);
    }
+
+   public override string? ToString () => $"{mStartPoint}, {mEndPoint}, [{Index}]";
    #endregion
 
    #region Implementation -------------------------------------------
+   /// <summary>Returns a new line with the given parameters</summary>
    Line GetLine (Point2 startPt, Point2 endPt, int index) {
       Line line = null!;
       if (this is PLine) line = new PLine (startPt, endPt, index);
@@ -38,6 +45,7 @@ public abstract class Line : ICloneable {
       return line;
    }
 
+   /// <summary>Sets the properties of the line</summary>
    protected void UpdateProperties () {
       if (mStartPoint.IsSet && mEndPoint.IsSet) {
          mAngle = mStartPoint.AngleTo (mEndPoint);
@@ -78,7 +86,7 @@ public sealed class BendLine : Line {
    #region Constructors ---------------------------------------------
    public BendLine (Point2 startPt, Point2 endPt, int index, BendLineInfo info) {
       (mStartPoint, mEndPoint, mIndex, BLInfo, IsBendLine) = (startPt, endPt, index, info, true);
-      UpdateProperties();
+      UpdateProperties ();
    }
    #endregion
 
