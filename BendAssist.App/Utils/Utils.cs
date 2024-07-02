@@ -113,6 +113,13 @@ public static class BendUtils {
       max = xfm.Transform (max);
       return new (new (min.X, min.Y), new (max.X, max.Y));
    }
+
+   /// <summary>Creates and returns the list of connected plines with the given points.</summary>
+   public static List<PLine> CreateConnectedPLines (int index, params Point2[] pts) {
+      var plines = new List<PLine> ();
+      for (int i = 0, len = pts.Length - 1; i < len; i++) plines.Add (new PLine (pts[i], pts[i + 1], index));
+      return plines;
+   }
 }
 #endregion
 
@@ -131,16 +138,16 @@ public static class CommonUtils {
    /// <summary>Converts the given angle in radians to degrees</summary>
    public static double ToDegrees (this double theta) => theta / sFactor;
 
-    /// <summary>Add space between words</summary>
-    public static string AddSpace (this string str) {
-        var result = Regex.Split (str, @"(?=[A-Z])");
-        return string.Join (" ", result);
-    }
-    #endregion
+   /// <summary>Add space between words</summary>
+   public static string AddSpace (this string str) {
+      var result = Regex.Split (str, @"(?=[A-Z])");
+      return string.Join (" ", result);
+   }
+   #endregion
 
-    #region Private Data ---------------------------------------------
-    // Factor useful for converting radians to degrees and vice versa
-    static double sFactor = Math.PI / 180;
+   #region Private Data ---------------------------------------------
+   // Factor useful for converting radians to degrees and vice versa
+   static double sFactor = Math.PI / 180;
    #endregion
 }
 #endregion

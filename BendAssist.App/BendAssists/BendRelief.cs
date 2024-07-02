@@ -20,7 +20,7 @@ public sealed class BendRelief : BendAssist {
       if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) return;
       mCommonVertices = [..mPart.Vertices.GroupBy (p => p).Where (p => p.Count () == 2).Select (g => g.Key)
                        .Where (x => x.IsWithinBound (mPart.Bound))]; // Get vertices which are common to bend line points and also within the profile bound
-      if (mCommonVertices is null) return;
+      if (mCommonVertices.Count < 1) return;
       List<PLine> pLines = [.. mPart.PLines];
       foreach (var vertex in mCommonVertices) {
          foreach (var bl in mPart.BendLines) {
@@ -45,11 +45,9 @@ public sealed class BendRelief : BendAssist {
                p2 = vertex.RadialMove (brHeight, translateAngle1);
                p3 = p2.RadialMove (brWidth, translateAngle2);
                p4 = FindIntersectPoint (nearBaseEdge, p3, translateAngle1);
-               pLines.Add (new (p1, p2));
-               pLines.Add (new (p2, p3));
-               pLines.Add (new (p3, p4));
-               pLines.Add (new (p4, vertex.AreEqual (nearBaseEdge.StartPoint) ? nearBaseEdge.EndPoint : nearBaseEdge.StartPoint));
                pLines.Remove (nearBaseEdge);
+               Point2[] pts = vertex.AreEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1] : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
+               pLines.AddRange (BendUtils.CreateConnectedPLines (nearBaseEdge.Index, pts));
             }
          }
       }
