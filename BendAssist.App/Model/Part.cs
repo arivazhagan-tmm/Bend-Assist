@@ -14,6 +14,7 @@ public class Part {
       Area = Vertices.Area ();
       Centroid = Vertices.Centroid ();
       Bound = new Bound2 (Vertices);
+      Thickness = thickeness;
    }
    #endregion
 
@@ -37,6 +38,7 @@ public class Part {
    public readonly List<Point2> Vertices;
    public readonly List<PLine> PLines;
    public readonly List<BendLine> BendLines;
+   public readonly double Thickness;
    #endregion
 }
 #endregion
