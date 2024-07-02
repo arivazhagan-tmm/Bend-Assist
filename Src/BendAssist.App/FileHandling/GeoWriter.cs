@@ -8,7 +8,7 @@ public class GeoWriter {
    #region Constructor ---------------------------------------------
    /// <summary>Gets the processed part and imported file</summary>
    public GeoWriter (Part part, string fileName) {
-      (mPart, mFileName) = (part.ReBuild (), fileName);
+      (mPart, mFileName) = (part.Regen (), fileName);
       mBoundMin = $"{mPart.Bound.MinX:F9} {mPart.Bound.MinY:F9} 0.000000000";
       mBoundMax = $"{mPart.Bound.MaxX:F9} {mPart.Bound.MaxY:F9} 0.000000000";
       mCentroid = $"{mPart.Centroid.X:F9} {mPart.Centroid.Y:F9} 0.000000000";

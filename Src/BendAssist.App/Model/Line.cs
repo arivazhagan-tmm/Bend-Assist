@@ -5,13 +5,21 @@ namespace BendAssist.App.Model;
 #region class Line --------------------------------------------------------------------------------
 public abstract class Line : ICloneable {
    #region Properties -----------------------------------------------
+   /// <summary>Returns true if the created line is tagged as bend line</summary>
    public bool IsBendLine { get; init; }
+   /// <summary>Creates the current index of the line while object creation</summary>
    public int Index { get => mIndex; init => mIndex = value; }
+   /// <summary>Distance between start and end point</summary>
    public double Length { get => mLength; init => mLength = value; }
+   /// <summary>Angle between start and end point</summary>
    public double Angle { get => mAngle; init => mAngle = value; }
+   /// <summary>Aligned bound created around the line</summary>
    public Bound2 Bound => mBound;
+   /// <summary>Start point of the line</summary>
    public Point2 StartPoint { get => mStartPoint; init => mStartPoint = value; }
+   /// <summary>End point of the line</summary>
    public Point2 EndPoint { get => mEndPoint; init { mEndPoint = value; UpdateProperties (); } }
+   /// <summary>Orientation of the line either Horizontal or Vertical or Inclined</summary>
    public EOrientation Orientation { get => mOrientation; init => mOrientation = value; }
    #endregion
 

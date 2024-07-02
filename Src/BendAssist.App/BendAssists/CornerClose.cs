@@ -17,10 +17,6 @@ public sealed class CornerClose : BendAssist {
    #endregion
 
    #region Methods --------------------------------------------------
-   public override bool Assisted () {
-      return true;
-   }
-
    /// <summary>Checks if a part is eligible for corner closing and gives the corner closed part</summary>
    public override void Execute () {
       var (vertices, pLines, bendLines, centroid) = (mPart!.Vertices, mPart.PLines, mPart.BendLines.Cast<Line> ().ToList (), mPart.Centroid);

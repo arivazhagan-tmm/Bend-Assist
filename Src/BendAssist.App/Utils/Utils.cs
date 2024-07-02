@@ -26,11 +26,36 @@ public static class BendUtils {
    /// <summary>Converts and returns point2 to Windows.Point</summary>
    public static Point Convert (this Point2 p) => new (p.X, p.Y);
 
+   /// <summary>Calculates and returns the convex hull points</summary>
+   public static List<Point2> ConvexHull (this List<Point2> pts) {
+      List<Point2> hull = [];
+      int n = pts.Count;
+      if (n > 3) {
+         int l = 0, p, q;
+         for (int i = 1; i < n; i++) if (pts[i].X < pts[l].X) l = i;
+         p = l;
+         do {
+            hull.Add (pts[p]);
+            q = (p + 1) % n;
+            for (int i = 0; i < n; i++) if (Orientation (pts[p], pts[i], pts[q]) == 2) q = i;
+            p = q;
+         } while (p != l);
+      }
+      return hull;
+   }
+
    public static Bound2 CreateBoundAround (PLine p) {
       var (p1, p2) = (p.StartPoint, p.EndPoint);
       var theta = p1.AngleTo (p2);
       var (t1, t2, offset) = (theta + 90, theta - 90, 2.0);
       return new Bound2 ([p1.RadialMove (offset, t1), p1.RadialMove (offset, t2), p2.RadialMove (offset, t1), p2.RadialMove (offset, t2)]);
+   }
+
+   /// <summary>Creates and returns the list of connected plines with the given points.</summary>
+   public static List<PLine> CreateConnectedPLines (int index, params Point2[] pts) {
+      var plines = new List<PLine> ();
+      for (int i = 0, len = pts.Length - 1; i < len; i++) plines.Add (new PLine (pts[i], pts[i + 1], index));
+      return plines;
    }
 
    public static double GetBendDeduction (double angle, double kFactor, double thickness, double radius) {
@@ -82,6 +107,20 @@ public static class BendUtils {
       return [.. tmp];
    }
 
+   /// <summary>Returns if two plines intersect or not.If true, updates the intersection point in the out parameter</summary>
+   public static bool Intersects (this PLine l, PLine other, out Point2 intersectPoint) {
+      intersectPoint = new ();
+      var (a, b, c, d) = (l.StartPoint, l.EndPoint, other.StartPoint, other.EndPoint);
+      var (a1, b1, a2, b2) = (b.Y - a.Y, a.X - b.X, d.Y - c.Y, c.X - d.X);
+      var determinant = (a1 * b2) - (a2 * b1);
+      if (determinant.IsEqual (0)) return false;
+      var (c1, c2) = ((a1 * a.X) + (b1 * a.Y), (a2 * c.X) + (b2 * c.Y));
+      double x = (b2 * c1 - b1 * c2) / determinant;
+      double y = (a1 * c2 - a2 * c1) / determinant;
+      intersectPoint = new (x, y);
+      return true;
+   }
+
    /// <summary>If the given point joins any lines in the list, if any updates the lines in the out parameter</summary>
    public static bool IsCommonVertex (this Point2 p, List<Line> lines, out List<Line> connectedLines) {
       connectedLines = lines.Where (l => l.HasVertex (p)).ToList ();
@@ -100,6 +139,13 @@ public static class BendUtils {
    /// <summary>Checks whether a point is within the bound</summary>
    public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X < b.MaxX && p.X > b.MinX && p.Y < b.MaxY && p.Y > b.MinY;
 
+   /// <summary>Orientation of the point based on the previous two points</summary>
+   public static int Orientation (Point2 p, Point2 q, Point2 r) {
+      int val = (int)((q.Y - p.Y) * (r.X - q.X) - (q.X - p.X) * (r.Y - q.Y));
+      if (val == 0) return 0; // colinear 
+      return (val > 0) ? 1 : 2; // clock or counterclock wise 
+   }
+
    /// <summary>Applies transformation on point p and returns as Point2</summary>
    public static Point2 Transform (this Point p, Matrix xfm) {
       var pt = xfm.Transform (p);
@@ -112,13 +158,6 @@ public static class BendUtils {
       min = xfm.Transform (min);
       max = xfm.Transform (max);
       return new (new (min.X, min.Y), new (max.X, max.Y));
-   }
-
-   /// <summary>Creates and returns the list of connected plines with the given points.</summary>
-   public static List<PLine> CreateConnectedPLines (int index, params Point2[] pts) {
-      var plines = new List<PLine> ();
-      for (int i = 0, len = pts.Length - 1; i < len; i++) plines.Add (new PLine (pts[i], pts[i + 1], index));
-      return plines;
    }
 }
 #endregion

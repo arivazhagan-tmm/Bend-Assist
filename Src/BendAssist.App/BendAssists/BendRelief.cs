@@ -10,11 +10,6 @@ public sealed class BendRelief : BendAssist {
    #endregion
 
    #region Methods -------------------------------------------------
-   /// <summary>Method to assess whether bend relief necessary for slected base and bend line</summary>
-   public override bool Assisted () {
-      return true;
-   }
-
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
       if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) return;

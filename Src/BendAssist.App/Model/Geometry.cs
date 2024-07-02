@@ -53,7 +53,6 @@ public readonly struct Point2 {
       return new Point2 (X + distance * Cos (theta), Y + distance * Sin (theta));
    }
 
-   /// <summary></summary>
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
 
    /// <summary>Translation with dx and dy from the vector v</summary>

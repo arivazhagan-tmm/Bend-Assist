@@ -13,12 +13,6 @@ public sealed class BendDeduction : BendAssist {
    #endregion
 
    #region Methods --------------------------------------------------
-   public override bool Assisted () {
-      if (mPart is null) return false;
-      Execute ();
-      return true;
-   }
-
    /// <summary>Applies bend deduction for the bend lines and the edges</summary>
    public override void Execute () {
       var totalBD = 0.0;

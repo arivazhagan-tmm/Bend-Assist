@@ -6,20 +6,35 @@ namespace BendAssist.App.Model;
 public class Part {
    #region Constructors ---------------------------------------------
    public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 2f) {
-      (PLines, BendLines) = (plines, bendLines);
-      BendLines = bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X).ToList ();
-      Vertices = [];
+      (PLines, BendLines, Thickness) = (plines, bendLines, thickeness);
+      BendLines = [.. bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X)];
+      (Vertices, Hull, AssistInfo) = ([], [], []);
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
-      BendLines.ForEach (l => Vertices.AddRange ([l.StartPoint, l.EndPoint]));
       Area = Vertices.Area ();
       Centroid = Vertices.Centroid ();
       Bound = new Bound2 (Vertices);
-      Thickness = thickeness;
+      var blVertices = new List<Point2> ();
+      BendLines.ForEach (l => blVertices.AddRange ([l.StartPoint, l.EndPoint]));
+      Vertices.AddRange (blVertices);
+      var lines = new List<Line> ();
+      lines.AddRange (PLines);
+      lines.AddRange (BendLines);
+      var vertices = blVertices.Where (v => !Hull.Contains (v)).Distinct ();
+      foreach (var v in vertices) {
+         if (v.IsCommonVertex (lines, out var connectedLines) && connectedLines.Count > 2) {
+            List<int> plIndices = [], blIndices = [];
+            foreach (var cl in connectedLines)
+               if (cl is BendLine) blIndices.Add (cl.Index); else plIndices.Add (cl.Index);
+            var reqAssist = blIndices.Count is 1 ? EBendAssist.BendRelief : EBendAssist.CornerRelief;
+            AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], reqAssist));
+         }
+      }
    }
    #endregion
 
    #region Methods --------------------------------------------------
-   public Part ReBuild () {
+   /// <summary>Regenerates the part by re-arranging the plines and vertices</summary>
+   public Part Regen () {
       List<PLine> plines = []; List<BendLine> blines = [];
       var index = 1;
       foreach (var l in PLines.OrderBy (l => l.Index))
@@ -33,12 +48,14 @@ public class Part {
    #region Properties -----------------------------------------------
    public string? FilePath;
    public readonly double Area;
+   public readonly double Thickness;
    public readonly Point2 Centroid;
    public readonly Bound2 Bound;
    public readonly List<Point2> Vertices;
+   public readonly List<Point2> Hull;
    public readonly List<PLine> PLines;
    public readonly List<BendLine> BendLines;
-   public readonly double Thickness;
+   public readonly List<AssistInfo> AssistInfo;
    #endregion
 }
 #endregion
@@ -49,4 +66,10 @@ public sealed class ProcessedPart (List<PLine> plines, List<BendLine> bendLines,
    public readonly EBendAssist AppliedAssist = asst;
    #endregion
 }
+#endregion
+
+#region struct AssistInfo -------------------------------------------------------------------------
+/// <summary>A struct to store the information of the bend assist for the imported part.</summary>
+/// Stores the indices of vertices, plines and bendlines which requires the bend assist
+public readonly record struct AssistInfo (int Vertex, int[] PLIndices, int[] BLIndieces, EBendAssist ReqAssist);
 #endregion

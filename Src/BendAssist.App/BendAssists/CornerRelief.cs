@@ -10,8 +10,6 @@ public sealed class CornerRelief : BendAssist {
    #endregion
 
    #region Methods --------------------------------------------------
-   public override bool Assisted () => true;
-
    public override void Execute () {
       if (mPart is null) return;
       List<Point2> intersectPts = [], // Intersect points between the two bend lines.

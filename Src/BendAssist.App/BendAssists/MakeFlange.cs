@@ -19,8 +19,6 @@ public sealed class MakeFlange : BendAssist {
    #endregion
 
    #region Methods --------------------------------------------------
-   public override bool Assisted () { return mCanAssist; }
-
    /// <summary>Adds a new flange with the specified height, angle and radius.</summary>
    /// Translates the selected pline to the given height
    /// Creates a bend line with the given angle.

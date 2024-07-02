@@ -7,14 +7,15 @@ public abstract class BendAssist {
    #region Properties -----------------------------------------------
    /// <summary>Instructions to be shown to the user</summary>
    public virtual string[] Prompts => mPrompts ??= [];
+   /// <summary>Error arise in while applying the bend assist</summary>
    public string? AssistError => mAssistError;
+   /// <summary>Part with bend lined and contour as connected poly lines</summary>
    public Part? Part { get => mPart; init => mPart = value; }
+   /// <summary>Part with the bend assisted lines and bendlines</summary>
    public ProcessedPart? ProcessedPart { get => mProcessedPart; init => mProcessedPart = value; }
    #endregion
 
    #region Methods --------------------------------------------------
-   public abstract bool Assisted ();
-
    public virtual void Execute () { }
 
    public virtual void ReceiveInput (object obj) {
