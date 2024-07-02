@@ -28,7 +28,7 @@ public sealed class MakeFlange : BendAssist {
       if (mPart == null) return;
       int index = 1;
       List<PLine> pLines = []; List<BendLine> bendLines = [];
-      foreach (var bendline in mPart.BendLines) bendLines?.Add (bendline);
+      foreach (var bendline in mPart.BendLines) bendLines.Add (bendline);
       foreach (var pline in mPart.PLines) {
          var (startPt, endPt) = (pline.StartPoint, pline.EndPoint);
          // Radially moves the point perpendicular to the selected pline
@@ -40,13 +40,14 @@ public sealed class MakeFlange : BendAssist {
          var (dx, dy) = (height * Math.Cos (angle), height * Math.Sin (angle));
          // Translates the line with the offset values
          var translatedLine = (PLine)pline.Translated (dx, dy);
-         pLines?.Add (new (pline.StartPoint, translatedLine.StartPoint, index++));
-         pLines?.Add (new (translatedLine.StartPoint, translatedLine.EndPoint, index++));
-         pLines?.Add (new (translatedLine.EndPoint, pline.EndPoint, index++));
+         var (tStart, tEnd) = (translatedLine.StartPoint, translatedLine.EndPoint);
+         pLines.Add (new (startPt, tStart, index++));
+         pLines.Add (new (tStart, tEnd, index++));
+         pLines.Add (new (tEnd, endPt, index++));
          var count = mPart.BendLines.Count;
          // Bend line is created at the previous position of the selected pline
          // This bend line is added to the last of the list with index as count+1
-         bendLines?.Add (new BendLine (startPt, endPt, count > 0 ? count - 1 : 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
+         bendLines?.Add (new BendLine (startPt, endPt, count > 0 ? count + 1 : 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
       }
       if (pLines != null && bendLines != null) mProcessedPart = new (pLines, bendLines, mRadius, EBendAssist.AddFlange);
    }
