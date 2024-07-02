@@ -32,8 +32,8 @@ public sealed class BendDeduction : BendAssist {
             var newPLine = pLine.StartPoint.Y < centroidY && pLine.EndPoint.Y < centroidY ? pLine.Translated (0, totalBD)
                                                                                           : pLine;
             if (pLine.Orientation is Vertical) {
-               if (newPLine.StartPoint.Y < newPLine.EndPoint.Y) newPLine = newPLine.Trimmed (0, totalBD, 0, 0);
-               else newPLine = newPLine.Trimmed (0, 0, 0, totalBD);
+               if (newPLine.StartPoint.Y < newPLine.EndPoint.Y) newPLine = newPLine.Trimmed (startDy: totalBD);
+               else newPLine = newPLine.Trimmed (endDy: totalBD);
             }
             newPLines.Add ((PLine)newPLine);
          }
@@ -41,7 +41,10 @@ public sealed class BendDeduction : BendAssist {
          var bendLines = mPart?.BendLines;
          var blCount = bendLines!.Count;
          // Algorithm works only for horizontal and vertical bend lines for now.
-         if (blCount == 0 || !(bendLines!.All (bl => bl.Orientation is EOrientation.Horizontal) || bendLines!.All (bl => bl.Orientation is EOrientation.Vertical))) return;
+         if (blCount == 0 || !(bendLines!.All (bl => bl.Orientation is EOrientation.Horizontal) || bendLines!.All (bl => bl.Orientation is EOrientation.Vertical))) {
+            mAssistError = "Bend Deduction is not yet implemented for this part";
+            return;
+         }
          // The area between the two innermost bend lines is considered the base.
          var bottomBLines = bendLines.Take (blCount / 2).Reverse ().ToList (); // Bend lines on the bottom and left side of the base
          var topBLines = bendLines.TakeLast (blCount - bottomBLines.Count).ToList (); // Bend lines on the top and right side of the base
@@ -141,14 +144,14 @@ public sealed class BendDeduction : BendAssist {
    /// <summary>Trims the given line according to the parameters given and returns the trimmed line</summary>
    Line TrimLine (EPCoord coOrdinate, Line trimLine, Line refLine, double offset, bool lessThan = false) {
       return coOrdinate switch {
-         X => lessThan == true ? trimLine.StartPoint.X < refLine.StartPoint.X ? trimLine.Trimmed (0, 0, -offset, 0)
-                                                                              : trimLine.Trimmed (-offset, 0, 0, 0)
-                               : trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (0, 0, offset, 0)
-                                                                              : trimLine.Trimmed (offset, 0, 0, 0),
-         _ => lessThan == true ? trimLine.StartPoint.Y < refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, -offset)
-                                                                              : trimLine.Trimmed (0, -offset, 0, 0)
-                               : trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (0, 0, 0, offset)
-                                                                              : trimLine.Trimmed (0, offset, 0, 0)
+         X => lessThan == true ? trimLine.StartPoint.X < refLine.StartPoint.X ? trimLine.Trimmed (endDx: -offset)
+                                                                              : trimLine.Trimmed (startDx: -offset)
+                               : trimLine.StartPoint.X > refLine.StartPoint.X ? trimLine.Trimmed (endDx: offset)
+                                                                              : trimLine.Trimmed (startDx: offset),
+         _ => lessThan == true ? trimLine.StartPoint.Y < refLine.StartPoint.Y ? trimLine.Trimmed (endDy: -offset)
+                                                                              : trimLine.Trimmed (startDy: -offset)
+                               : trimLine.StartPoint.Y > refLine.StartPoint.Y ? trimLine.Trimmed (endDy: offset)
+                                                                              : trimLine.Trimmed (startDy: offset)
       };
    }
    #endregion

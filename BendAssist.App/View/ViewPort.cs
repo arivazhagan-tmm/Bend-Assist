@@ -79,15 +79,18 @@ internal sealed class Viewport : Canvas {
       mCords = new TextBlock () { Background = Brushes.Transparent };
       mToolTip = new ToolTip ();
       var menu = new ContextMenu ();
-      var zoomExtnd = new MenuItem () { Header = "Zoom Extents" };
-      zoomExtnd.Click += (s, e) => ZoomExtents ();
-      menu.Items.Add (zoomExtnd);
+      var zoomExtent = new MenuItem () { Header = "Zoom Extents" };
+      var clearViewPort = new MenuItem () { Header = "Clear" };
+      zoomExtent.Click += (s, e) => ZoomExtents ();
+      clearViewPort.Click += (s, e) => Clear ();
+      menu.Items.Add (zoomExtent);
+      menu.Items.Add (clearViewPort);
       ContextMenu = menu;
       SetToolTip (this, mToolTip);
       Children.Add (mCords);
    }
 
-   // Udpates the snap point and current mouse point on the viewport
+   // Updates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
       if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
