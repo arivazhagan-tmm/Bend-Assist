@@ -52,7 +52,7 @@ public static class BendUtils {
    /// <summary>Checks if the given line present in the list or not by comparing the vertices</summary>
    public static bool HasDuplicate (this List<Line> lines, Line l) {
       foreach (var line in lines)
-         if (line.StartPoint.AreEqual (l.StartPoint) && line.EndPoint.AreEqual (l.EndPoint)) return true;
+         if (line.StartPoint.IsEqual (l.StartPoint) && line.EndPoint.IsEqual (l.EndPoint)) return true;
       return false;
    }
 

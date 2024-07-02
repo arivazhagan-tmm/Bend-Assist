@@ -46,7 +46,7 @@ public sealed class BendRelief : BendAssist {
                p3 = p2.RadialMove (brWidth, translateAngle2);
                p4 = FindIntersectPoint (nearBaseEdge, p3, translateAngle1);
                pLines.Remove (nearBaseEdge);
-               Point2[] pts = vertex.AreEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1] : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
+               Point2[] pts = vertex.IsEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1] : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
                pLines.AddRange (BendUtils.CreateConnectedPLines (nearBaseEdge.Index, pts));
             }
          }

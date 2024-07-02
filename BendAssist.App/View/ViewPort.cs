@@ -2,9 +2,10 @@
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using static System.Windows.Controls.ToolTipService;
 using BendAssist.App.Model;
 using BendAssist.App.Utils;
-using static System.Windows.Controls.ToolTipService;
 
 namespace BendAssist.App.View;
 
@@ -12,9 +13,6 @@ namespace BendAssist.App.View;
 internal sealed class Viewport : Canvas {
    #region Constructors ---------------------------------------------
    public Viewport () => Loaded += OnLoaded;
-   #endregion
-
-   #region Properties -----------------------------------------------
    #endregion
 
    #region Methods --------------------------------------------------
@@ -84,7 +82,6 @@ internal sealed class Viewport : Canvas {
       zoomExtent.Click += (s, e) => ZoomExtents ();
       clearViewPort.Click += (s, e) => Clear ();
       menu.Items.Add (zoomExtent);
-      menu.Items.Add (clearViewPort);
       ContextMenu = menu;
       SetToolTip (this, mToolTip);
       Children.Add (mCords);
@@ -93,12 +90,13 @@ internal sealed class Viewport : Canvas {
    // Updates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
+      mSnapPt = new Point2 ();
       if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
          mSnapPt = mMousePt = pt;
          // Tool tip for snap points
          mToolTip!.Content = $"X : {mSnapPt.X:F2}  Y : {mSnapPt.Y:F2}";
          mToolTip.IsOpen = true;
-         ToolTipService.SetPlacement (this, System.Windows.Controls.Primitives.PlacementMode.Mouse);
+         SetPlacement (this, PlacementMode.Mouse);
       } else mToolTip!.IsOpen = false;
       if (mCords != null) mCords.Text = $"X : {double.Round (mMousePt.X, 2)}  Y : {double.Round (mMousePt.Y, 2)}"; // To display the current mouse point
       InvalidateVisual ();
@@ -114,14 +112,20 @@ internal sealed class Viewport : Canvas {
 
    protected override void OnRender (DrawingContext dc) {
       dc.PushClip (new RectangleGeometry (mVRect)); // Keeps drawing inside viewport bounds
-      dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
+      //dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
       if (mPart is null) return;
       var v = new Vector2 (mPart.Bound.MaxX + 10, 0.0);
       foreach (var l in mPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint), Transform (l.EndPoint));
       foreach (var l in mPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint), Transform (l.EndPoint));
       if (mProcessedPart != null) {
-         foreach (var l in mProcessedPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
-         foreach (var l in mProcessedPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
+         foreach (var l in mProcessedPart.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
+         foreach (var l in mProcessedPart.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
+      }
+      if (mSnapPt.IsSet) {
+         var snapSize = 5;
+         var snapPt = Transform (mSnapPt);
+         var vec = new Vector (snapSize, snapSize);
+         dc.DrawRectangle (Brushes.White, mPLPen, new (snapPt - vec, snapPt + vec));
       }
       base.OnRender (dc);
       Point Transform (Point2 pt) => mPXfm.Transform (pt.Convert ());

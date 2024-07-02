@@ -51,8 +51,8 @@ public sealed class CornerRelief : BendAssist {
    (int, Point2) GetIntersectBendPts (Point2 point, int index) {
       List<Point2> tempPoint = [];
       while (++index < mPart!.BendLines.Count) {
-         if (point.AreEqual (mPart.BendLines[index].StartPoint)) tempPoint.Add (point);
-         if (point.AreEqual (mPart.BendLines[index].EndPoint)) tempPoint.Add (point);
+         if (point.IsEqual (mPart.BendLines[index].StartPoint)) tempPoint.Add (point);
+         if (point.IsEqual (mPart.BendLines[index].EndPoint)) tempPoint.Add (point);
       }
       return (tempPoint.Count, tempPoint.FirstOrDefault ());
    }
@@ -64,8 +64,8 @@ public sealed class CornerRelief : BendAssist {
       for (int i = 0; i < mIntersectPts.Count; i++) {
          List<Point2> tempPoint = [];
          foreach (var pLine in mPart!.BendLines) {
-            if (pLine.StartPoint.AreEqual (mIntersectPts[i])) tempPoint.Add (pLine.EndPoint);
-            if (pLine.EndPoint.AreEqual (mIntersectPts[i])) tempPoint.Add (pLine.StartPoint);
+            if (pLine.StartPoint.IsEqual (mIntersectPts[i])) tempPoint.Add (pLine.EndPoint);
+            if (pLine.EndPoint.IsEqual (mIntersectPts[i])) tempPoint.Add (pLine.StartPoint);
          }
          intersectPtAndBendLines.Add (mIntersectPts[i], tempPoint);
       }
@@ -88,8 +88,8 @@ public sealed class CornerRelief : BendAssist {
       List<int> changeIndex = [];
       foreach (var pLine in mPart!.PLines) {
          for (int i = 0; i < mIntersectPts.Count; i++) {
-            if (pLine.StartPoint.AreEqual (mIntersectPts[i])) changeIndex.Add (pLine.Index);
-            else if (pLine.EndPoint.AreEqual (mIntersectPts[i])) changeIndex.Add (pLine.Index);
+            if (pLine.StartPoint.IsEqual (mIntersectPts[i])) changeIndex.Add (pLine.Index);
+            else if (pLine.EndPoint.IsEqual (mIntersectPts[i])) changeIndex.Add (pLine.Index);
          }
       }
       int len = mPart.PLines.Count + (mNew45DegVertices.Count * 2);
@@ -105,7 +105,7 @@ public sealed class CornerRelief : BendAssist {
             int choose = 0;
             List<Point2> tempPoint = [];
             foreach (var point in mIntersectPts) {
-               if (mPart.PLines[i - 1].StartPoint.AreEqual (point) || mPart.PLines[i - 1].EndPoint.AreEqual (point)) {
+               if (mPart.PLines[i - 1].StartPoint.IsEqual (point) || mPart.PLines[i - 1].EndPoint.IsEqual (point)) {
                   tempPoint = GetPLines (mPart.PLines[i - 1], mPart.PLines[i], point, mNew45DegVertices[choose]);
                   break;
                }

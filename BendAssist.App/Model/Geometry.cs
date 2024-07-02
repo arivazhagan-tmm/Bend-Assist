@@ -4,8 +4,20 @@ using BendAssist.App.Utils;
 namespace BendAssist.App.Model;
 
 #region struct Point2 -----------------------------------------------------------------------------
-public readonly record struct Point2 (double X, double Y, int Index = -1) {
+public readonly struct Point2 {
+   #region Constructors ---------------------------------------------
+   public Point2 () => (X, Y) = (double.NaN, double.NaN);
+   public Point2 (double x, double y, int index = -1) => (X, Y, Index) = (x, y, index);
+   #endregion
+
    #region Properties -----------------------------------------------
+   /// <summary>X ordinate</summary>
+   public readonly double X;
+   /// <summary>Y ordinate</summary>
+   public readonly double Y;
+   /// <summary>Index of the point</summary>
+   public readonly int Index;
+   /// <summary>Returns true if the point ordinates have valid values</summary>
    public bool IsSet => !double.IsNaN (Y) && !double.IsNaN (Y);
    #endregion
 
@@ -17,7 +29,7 @@ public readonly record struct Point2 (double X, double Y, int Index = -1) {
    }
 
    /// <summary>Checks given point is a duplicate</summary>
-   public bool AreEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
+   public bool IsEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
 
    /// <summary>Distance from given point p</summary>
    public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
@@ -45,7 +57,7 @@ public readonly record struct Point2 (double X, double Y, int Index = -1) {
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
 
    /// <summary>Translation with dx and dy from the vector v</summary>
-   public Point2 Translate (Vector2 v) => this + v;
+   public Point2 Translated (Vector2 v) => this + v;
    #endregion
 
    #region Operators ------------------------------------------------
@@ -101,12 +113,6 @@ public readonly struct Bound2 {
       var maxY = p.Y + (MaxY - p.Y) * f;
       return new (new (minX, minY), new (maxX, maxY));
    }
-   #endregion
-
-   #region Implementation -------------------------------------------
-   #endregion
-
-   #region Private Data ---------------------------------------------
    #endregion
 }
 #endregion
