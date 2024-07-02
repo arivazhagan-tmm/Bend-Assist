@@ -7,12 +7,14 @@ public class Part {
    #region Constructors ---------------------------------------------
    public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 0.0f) {
       (PLines, BendLines) = (plines, bendLines);
+      BendLines = bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X).ToList ();
       Vertices = [];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
       BendLines.ForEach (l => Vertices.AddRange ([l.StartPoint, l.EndPoint]));
       Area = Vertices.Area ();
       Centroid = Vertices.Centroid ();
       Bound = new Bound2 (Vertices);
+      Thickness = thickeness;
    }
    #endregion
 
@@ -36,6 +38,7 @@ public class Part {
    public readonly List<Point2> Vertices;
    public readonly List<PLine> PLines;
    public readonly List<BendLine> BendLines;
+   public readonly double Thickness;
    #endregion
 }
 #endregion
