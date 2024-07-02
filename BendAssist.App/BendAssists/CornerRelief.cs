@@ -14,20 +14,21 @@ public sealed class CornerRelief : BendAssist {
 
    public override void Execute () {
       if (mPart is null) return;
+      if (!CheckBendLine ()) {
+         Terminator (1);
+         return;
+      }
       List<Point2> intersectPts = [], // Intersect points between the two bend lines.
                    pLinesStartPts = [], // All starting points of the PLines.
                    pLinesEndPts = []; // All ending points of the PLines.
-      if (mPart.BendLines.Count >= 2) {
-         for (int i = 0; i < mPart.BendLines.Count - 1; i++) {
-            var (p1, cP1) = GetIntersectBendPts (mPart.BendLines[i].StartPoint, i);
-            if (p1 > 0) intersectPts.Add (cP1);
-            var (p2, cP2) = GetIntersectBendPts (mPart.BendLines[i].EndPoint, i);
-            if (p2 > 0) intersectPts.Add (cP2);
-         }
+      for (int i = 0; i < mBendLine.Count - 1; i++) {
+         var (p1, cP1) = GetIntersectBendPts (mBendLine[i].StartPoint, i);
+         if (p1 > 0) intersectPts.Add (cP1);
+         var (p2, cP2) = GetIntersectBendPts (mBendLine[i].EndPoint, i);
+         if (p2 > 0) intersectPts.Add (cP2);
       }
       if (intersectPts.Count == 0) {
-         mCanAssist = false;
-         mAssistError = "No bend line intersection exists";
+         Terminator (2);
          return;
       }
       foreach (var point in mPart.PLines) {
@@ -50,9 +51,9 @@ public sealed class CornerRelief : BendAssist {
    // check the point with other bend line points (it can be either start or end point)
    (int, Point2) GetIntersectBendPts (Point2 point, int index) {
       List<Point2> tempPoint = [];
-      while (++index < mPart!.BendLines.Count) {
-         if (point.AreEqual (mPart.BendLines[index].StartPoint)) tempPoint.Add (point);
-         if (point.AreEqual (mPart.BendLines[index].EndPoint)) tempPoint.Add (point);
+      while (++index < mBendLine.Count) {
+         if (point.AreEqual (mBendLine[index].StartPoint)) tempPoint.Add (point);
+         if (point.AreEqual (mBendLine[index].EndPoint)) tempPoint.Add (point);
       }
       return (tempPoint.Count, tempPoint.FirstOrDefault ());
    }
@@ -63,7 +64,7 @@ public sealed class CornerRelief : BendAssist {
       //along with respective bend lines another point.
       for (int i = 0; i < mIntersectPts.Count; i++) {
          List<Point2> tempPoint = [];
-         foreach (var pLine in mPart!.BendLines) {
+         foreach (var pLine in mBendLine) {
             if (pLine.StartPoint.AreEqual (mIntersectPts[i])) tempPoint.Add (pLine.EndPoint);
             if (pLine.EndPoint.AreEqual (mIntersectPts[i])) tempPoint.Add (pLine.StartPoint);
          }
@@ -132,11 +133,30 @@ public sealed class CornerRelief : BendAssist {
 
    /// <summary>Get a new point for corner relief</summary>
    Point2 GetPoint (double px, double py, double cx, double cy, double bendAllowance) {
-      if (cx.IsEqual (px) && cy > py) return new Point2 (cx, cy - bendAllowance / 2);
-      else if (cx.IsEqual (px) && cy < py) return new Point2 (cx, cy + bendAllowance / 2);
-      else if (cy.IsEqual (py) && cx > px) return new Point2 (cx - bendAllowance / 2, cy);
-      else if (cy.IsEqual (py) && cx < px) return new Point2 (cx + bendAllowance / 2, cy);
-      return new Point2 ();
+      Point2 temp = new ();
+      if (cx.IsEqual (px) && cy > py) temp = new Point2 (cx, cy - bendAllowance / 2);
+      else if (cx.IsEqual (px) && cy < py) temp = new Point2 (cx, cy + bendAllowance / 2);
+      else if (cy.IsEqual (py) && cx > px) temp = new Point2 (cx - bendAllowance / 2, cy);
+      else if (cy.IsEqual (py) && cx < px) temp = new Point2 (cx + bendAllowance / 2, cy);
+      return temp;
+   }
+
+   /// <summary>Check all the bend lines orientation in the part</summary>
+   bool CheckBendLine () {
+      for (int i = 0; i < mPart!.BendLines.Count; i++) {
+         if (mPart!.BendLines[i].Orientation == EOrientation.Horizontal ||
+            mPart.BendLines[i].Orientation == EOrientation.Vertical)
+            mBendLine.Add (mPart.BendLines[i]);
+      }
+      if (mPart!.BendLines.Count == mBendLine.Count || mPart!.BendLines.Count <= 1) return true;
+      return false;
+   }
+
+   /// <summary>To end the current operation</summary>
+   void Terminator (int i) {
+      mCanAssist = false;
+      if (i == 1) mAssistError = "At this time, there is no implementation for inclined bend lines.";
+      else if (i == 2) mAssistError = "No bend line intersection exists";
    }
    #endregion
 
@@ -144,6 +164,7 @@ public sealed class CornerRelief : BendAssist {
    List<Point2> mIntersectPts = [], // Intersect point between the two bend lines and plines.
                 mNew45DegVertices = []; // 45 degree points.
    readonly double mBendAllowance; // Bend Allowance value.(Predefined material 1.0038 with a bend radius value is 2)
+   List<BendLine> mBendLine = []; // Only contains the horizontal and vertical bend lines.
    #endregion
 }
 #endregion
