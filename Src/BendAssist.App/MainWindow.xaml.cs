@@ -33,11 +33,9 @@ public partial class MainWindow : Window {
    public static MainWindow? It;
    #endregion
 
-   #region Methods --------------------------------------------------
-   #endregion
-
    #region Implementation -------------------------------------------
    void OnLoaded (object sender, RoutedEventArgs e) {
+      Background = Brushes.LightGray;
       It = this;
       #region Styles ----------------------------
       var spStyle = new Style ();
@@ -85,9 +83,7 @@ public partial class MainWindow : Window {
       };
       var openMenu = new MenuItem () { Header = "_Import...", IsEnabled = true };
       openMenu.Click += (s, e) => {
-         var dlg = new OpenFileDialog () {
-            DefaultExt = ".geo", Title = "Import Geo file", Filter = "Geo files (*.geo)|*.geo"
-         };
+         var dlg = new OpenFileDialog () { DefaultExt = ".geo", Title = "Import Geo file", Filter = "Geo files (*.geo)|*.geo" };
          if (dlg.ShowDialog () is true) {
             var reader = new GeoReader (dlg.FileName);
             var fileName = dlg.FileName;
@@ -97,11 +93,7 @@ public partial class MainWindow : Window {
          }
       };
       foreach (var option in Enum.GetNames (typeof (EBendAssist))) {
-         var btn = new Button () {
-            Content = option.AddSpace (),
-            Tag = option,
-            Style = btnStyle,
-         };
+         var btn = new Button () { Content = option.AddSpace (), Tag = option, Style = btnStyle };
          btn.Click += OnOptionClicked;
          btnGrid.Children.Add (btn);
       }
@@ -119,7 +111,6 @@ public partial class MainWindow : Window {
       DockPanel.SetDock (mViewport, Dock.Right);
       DockPanel.SetDock (optionPanel, Dock.Left);
       mMainPanel.Content = dp;
-      Background = Brushes.LightGray;
    }
 
    // Handles the button click events
