@@ -5,7 +5,7 @@ namespace BendAssist.App.Model;
 #region class Part --------------------------------------------------------------------------------
 public class Part {
    #region Constructors ---------------------------------------------
-   public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 0.0f) {
+   public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 2f) {
       (PLines, BendLines) = (plines, bendLines);
       BendLines = bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X).ToList ();
       Vertices = [];
