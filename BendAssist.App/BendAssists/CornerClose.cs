@@ -7,10 +7,12 @@ namespace BendAssist.App.BendAssists;
 #region class CornerClose -------------------------------------------------------------------------
 public sealed class CornerClose : BendAssist {
    #region Constructors ---------------------------------------------
+   /// <summary>Gets the part and instantiates the members to accomplish corner closing</summary>
    public CornerClose (Part part) => (mPart, mIndex, mCcVertices, mStepLines, mEdgeLines, mNewLines, mStepStartPts, mStepEndPts) = (part, -1, [], [], [], [], [], []);
    #endregion
 
    #region Properties -----------------------------------------------
+   /// <summary>Prompts shown to the user to accomplish the corner closing</summary>
    public override string[] Prompts => ["Select the extruding line", "Select the intruding line"];
    #endregion
 
