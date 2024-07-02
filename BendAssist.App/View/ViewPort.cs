@@ -18,11 +18,13 @@ internal sealed class Viewport : Canvas {
    #endregion
 
    #region Methods --------------------------------------------------
+   /// <summary>Clears the drawn lines from the viewport</summary>
    public void Clear () {
       mPart = mProcessedPart = null;
       mLines?.Clear ();
    }
 
+   /// <summary>Draws the plines of the part in the viewport</summary>
    public void UpdateViewport (Part part) {
       if (part is null) return;
       mLines ??= [];
@@ -37,21 +39,6 @@ internal sealed class Viewport : Canvas {
    public void ZoomExtents () {
       UpdateBound ();
       InvalidateVisual ();
-   }
-
-   protected override void OnRender (DrawingContext dc) {
-      dc.PushClip (new RectangleGeometry (mVRect)); // Keeps drawing inside viewport bounds
-      dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
-      if (mPart is null) return;
-      var v = new Vector2 (mPart.Bound.MaxX + 10, 0.0);
-      foreach (var l in mPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint), Transform (l.EndPoint));
-      foreach (var l in mPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint), Transform (l.EndPoint));
-      if (mProcessedPart != null) {
-         foreach (var l in mProcessedPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
-         foreach (var l in mProcessedPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
-      }
-      base.OnRender (dc);
-      Point Transform (Point2 pt) => mPXfm.Transform (pt.Convert ());
    }
    #endregion
 
@@ -122,10 +109,26 @@ internal sealed class Viewport : Canvas {
       InvalidateVisual ();
    }
 
+   protected override void OnRender (DrawingContext dc) {
+      dc.PushClip (new RectangleGeometry (mVRect)); // Keeps drawing inside viewport bounds
+      dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
+      if (mPart is null) return;
+      var v = new Vector2 (mPart.Bound.MaxX + 10, 0.0);
+      foreach (var l in mPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint), Transform (l.EndPoint));
+      foreach (var l in mPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint), Transform (l.EndPoint));
+      if (mProcessedPart != null) {
+         foreach (var l in mProcessedPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
+         foreach (var l in mProcessedPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
+      }
+      base.OnRender (dc);
+      Point Transform (Point2 pt) => mPXfm.Transform (pt.Convert ());
+   }
+
    // Updates the bound of drawn entities using projection transform
    void UpdateBound () {
+      if (mPart is null) return;
       List<Point2> boundPts = [];
-      var vec = new Vector2 (mPart!.Bound.MaxX * 1.25, 0.0);
+      var vec = new Vector2 (mPart.Bound.MaxX * 1.25, 0.0);
       if (mPart != null) boundPts.AddRange (mPart.Vertices);
       if (mProcessedPart != null) boundPts.AddRange (mProcessedPart.Vertices.Select (v => v + vec));
       if (boundPts.Count > 2) UpdatePXfm (new Bound2 (boundPts));
