@@ -25,8 +25,13 @@ public class Part {
             List<int> plIndices = [], blIndices = [];
             foreach (var cl in connectedLines)
                if (cl is BendLine) blIndices.Add (cl.Index); else plIndices.Add (cl.Index);
-            var reqAssist = blIndices.Count is 1 ? EBendAssist.BendRelief : EBendAssist.CornerRelief;
-            AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], reqAssist));
+            var count = blIndices.Count;
+            if (count is 1)
+               AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.BendRelief));
+            else if (count is 2) {
+               AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerClose));
+               AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerRelief));
+            }
          }
       }
    }
@@ -37,10 +42,15 @@ public class Part {
    public Part Regen () {
       List<PLine> plines = []; List<BendLine> blines = [];
       var index = 1;
-      foreach (var l in PLines.OrderBy (l => l.Index))
-         plines.Add (new (l.StartPoint.Duplicate (index), l.EndPoint.Duplicate (index++), l.Index));
+      foreach (var l in PLines.OrderBy (l => l.Index)) {
+         var matchingPline = plines.FirstOrDefault (x => x.StartPoint.IsEqual (l.EndPoint));    // Finds if the point is already present in the list
+         var startPoint = l.StartPoint.Duplicate (index);
+         // Assigns the point with previous index if already present in the list
+         var endPoint = matchingPline != null ? l.EndPoint.Duplicate (matchingPline.StartPoint.Index) : l.EndPoint.Duplicate (++index);
+         plines.Add (new (startPoint, endPoint, l.Index));
+      }
       foreach (var l in BendLines.OrderBy (l => l.Index))
-         blines.Add (new (l.StartPoint.Duplicate (index++), l.EndPoint.Duplicate (index++), l.Index, l.BLInfo));
+         blines.Add (new (l.StartPoint.Duplicate (++index), l.EndPoint.Duplicate (++index), l.Index, l.BLInfo));
       return new Part (plines, blines);
    }
    #endregion
