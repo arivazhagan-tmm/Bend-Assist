@@ -80,8 +80,6 @@ public readonly struct Bound2 {
       MaxX = Max (p1.X, p2.X);
       MinY = Min (p1.Y, p2.Y);
       MaxY = Max (p1.Y, p2.Y);
-      (Height, Width) = (MaxY - MinY, MaxX - MinX);
-      Mid = new ((MaxX + MinX) * 0.5, (MaxY + MinY) * 0.5);
    }
 
    public Bound2 (IEnumerable<Point2> pts) {
@@ -89,8 +87,6 @@ public readonly struct Bound2 {
       MaxX = pts.Max (p => p.X);
       MinY = pts.Min (p => p.Y);
       MaxY = pts.Max (p => p.Y);
-      (Height, Width) = (MaxY - MinY, MaxX - MinX);
-      Mid = new ((MaxX + MinX) * 0.5, (MaxY + MinY) * 0.5);
    }
    #endregion
 
@@ -100,9 +96,9 @@ public readonly struct Bound2 {
    public double MaxX { get; init; }
    public double MinY { get; init; }
    public double MaxY { get; init; }
-   public double Width { get; init; }
-   public double Height { get; init; }
-   public Point2 Mid { get; init; }
+   public double Width => MaxX - MinX;
+   public double Height => MaxY - MinY;
+   public Point2 Mid => new ((MinX + MaxX) / 2, (MinY + MaxY) / 2);
    #endregion
 
    #region Methods --------------------------------------------------
