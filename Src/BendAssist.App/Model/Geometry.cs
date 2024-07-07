@@ -52,8 +52,8 @@ public readonly struct Point2 {
 
    /// <summary>Radially moves the point to distance at theta in degrees</summary>
    public Point2 RadialMove (double distance, double theta) {
-      theta = theta.ToRadians ();
-      return new Point2 (X + distance * Cos (theta), Y + distance * Sin (theta));
+      var (sin, cos) = SinCos (theta.ToRadians ());
+      return new Point2 (X + distance * cos, Y + distance * sin);
    }
 
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
