@@ -44,14 +44,10 @@ public readonly struct Point2 {
 
    /// <summary>Nearest neighbourhood point within given proximity</summary>
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
-      neighbour = new Point2 ();
-      if (neighbours is null || neighbours.Count () is 0) return false;
-      var hasNeighbour = false;
-      foreach (var pt in neighbours) {
-         double dist = pt.DistanceTo (this);
-         if (dist < proximity || dist.IsEqual (proximity)) { hasNeighbour = true; neighbour = pt; break; }
-      }
-      return hasNeighbour;
+      foreach (var pt in neighbours)
+         if (pt.DistanceTo (this) < proximity) { neighbour = pt; return true; }
+      neighbour = new ();
+      return false;
    }
 
    /// <summary>Radially moves the point to distance at theta in degrees</summary>
