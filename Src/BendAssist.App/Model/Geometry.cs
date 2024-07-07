@@ -40,7 +40,7 @@ public readonly struct Point2 {
    }
 
    /// <summary>Copy of the point with custom index</summary>
-   public Point2 Duplicate (int index) => new (X, Y, index);
+   public Point2 WithIndex (int index) => new (X, Y, index);
 
    /// <summary>Nearest neighbourhood point within given proximity</summary>
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
