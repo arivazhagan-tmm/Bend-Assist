@@ -22,6 +22,8 @@ public readonly struct Point2 {
    #endregion
 
    #region Methods --------------------------------------------------
+   // AV. Angles internally should always be in radians.
+   // Don't round off returned values from API like this.
    /// <summary>Angle made with given P in degrees</summary>
    public double AngleTo (Point2 p) {
       var angle = Round (Atan2 (p.Y - Y, p.X - X) * (180 / PI), 2);
