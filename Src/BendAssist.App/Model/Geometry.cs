@@ -34,7 +34,10 @@ public readonly struct Point2 {
    public bool IsEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
 
    /// <summary>Distance from given point p</summary>
-   public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
+   public double DistanceTo (Point2 p) {
+      double dx = p.X - X, dy = p.Y - Y;
+      return Sqrt (dx * dx + dy * dy);
+   }
 
    /// <summary>Copy of the point with custom index</summary>
    public Point2 Duplicate (int index) => new (X, Y, index);
