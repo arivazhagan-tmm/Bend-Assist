@@ -22,6 +22,8 @@ public readonly struct Point2 {
    #endregion
 
    #region Methods --------------------------------------------------
+   // AV. Angles internally should always be in radians.
+   // Don't round off returned values from API like this.
    /// <summary>Angle made with given P in degrees</summary>
    public double AngleTo (Point2 p) {
       var angle = Round (Atan2 (p.Y - Y, p.X - X) * (180 / PI), 2);
@@ -32,25 +34,26 @@ public readonly struct Point2 {
    public bool IsEqual (Point2 p) => p.X.IsEqual (X) && p.Y.IsEqual (Y);
 
    /// <summary>Distance from given point p</summary>
-   public double DistanceTo (Point2 p) => Round (Sqrt (Pow (p.X - X, 2) + Pow (p.Y - Y, 2)), 2);
+   public double DistanceTo (Point2 p) {
+      double dx = p.X - X, dy = p.Y - Y;
+      return Sqrt (dx * dx + dy * dy);
+   }
 
    /// <summary>Copy of the point with custom index</summary>
-   public Point2 Duplicate (int index) => new (X, Y, index);
+   public Point2 WithIndex (int index) => new (X, Y, index);
 
    /// <summary>Nearest neighbourhood point within given proximity</summary>
    public bool HasNeighbour (IEnumerable<Point2> neighbours, double proximity, out Point2 neighbour) {
-      neighbour = new Point2 ();
-      if (neighbours is null || neighbours.Count () is 0) return false;
-      var hasNeighbour = false;
       foreach (var pt in neighbours)
-         if (pt.DistanceTo (this) < proximity || pt.DistanceTo (this).IsEqual (proximity)) { hasNeighbour = true; neighbour = pt; break; }
-      return hasNeighbour;
+         if (pt.DistanceTo (this) < proximity) { neighbour = pt; return true; }
+      neighbour = new ();
+      return false;
    }
 
    /// <summary>Radially moves the point to distance at theta in degrees</summary>
    public Point2 RadialMove (double distance, double theta) {
-      theta = theta.ToRadians ();
-      return new Point2 (X + distance * Cos (theta), Y + distance * Sin (theta));
+      var (sin, cos) = SinCos (theta.ToRadians ());
+      return new Point2 (X + distance * cos, Y + distance * sin);
    }
 
    public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
@@ -77,8 +80,6 @@ public readonly struct Bound2 {
       MaxX = Max (p1.X, p2.X);
       MinY = Min (p1.Y, p2.Y);
       MaxY = Max (p1.Y, p2.Y);
-      (Height, Width) = (MaxY - MinY, MaxX - MinX);
-      Mid = new ((MaxX + MinX) * 0.5, (MaxY + MinY) * 0.5);
    }
 
    public Bound2 (IEnumerable<Point2> pts) {
@@ -86,8 +87,6 @@ public readonly struct Bound2 {
       MaxX = pts.Max (p => p.X);
       MinY = pts.Min (p => p.Y);
       MaxY = pts.Max (p => p.Y);
-      (Height, Width) = (MaxY - MinY, MaxX - MinX);
-      Mid = new ((MaxX + MinX) * 0.5, (MaxY + MinY) * 0.5);
    }
    #endregion
 
@@ -97,9 +96,9 @@ public readonly struct Bound2 {
    public double MaxX { get; init; }
    public double MinY { get; init; }
    public double MaxY { get; init; }
-   public double Width { get; init; }
-   public double Height { get; init; }
-   public Point2 Mid { get; init; }
+   public double Width => MaxX - MinX;
+   public double Height => MaxY - MinY;
+   public Point2 Mid => new ((MinX + MaxX) / 2, (MinY + MaxY) / 2);
    #endregion
 
    #region Methods --------------------------------------------------
