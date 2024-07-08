@@ -14,3 +14,5 @@ public enum ELoc { Bottom, Left, Right, Top }
 
 /// <summary>Cartesian Coordinates</summary>
 public enum EPCoord { X, Y }
+
+public enum EMode { None, Pick, Clip }

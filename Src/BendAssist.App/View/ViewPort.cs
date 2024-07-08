@@ -22,6 +22,15 @@ internal sealed class Viewport : Canvas {
       mLines?.Clear ();
    }
 
+   public void SetSelectionMode (EMode mode = EMode.None) {
+      mCurrentMode = mode;
+      Cursor = mode switch {
+         EMode.Pick => Cursors.Hand,
+         EMode.Clip => Cursors.Cross,
+         _ => Cursors.Arrow
+      };
+   }
+
    /// <summary>Draws the plines of the part in the viewport</summary>
    public void UpdateViewport (Part part) {
       if (part is null) return;
@@ -71,6 +80,19 @@ internal sealed class Viewport : Canvas {
       MouseWheel += OnMouseWheel;
       MouseEnter += (s, e) => Cursor = Cursors.Cross;
       MouseLeave += (s, e) => Cursor = Cursors.Arrow;
+      MouseUp += (s, e) => {
+         if (mIsClipping) {
+            foreach (var line in mPart?.PLines!) {
+               if (line is PLine pl && pl.IsInside (new Bound2 (mFirstPt, mMousePt))) {
+                  pl.IsSelected = true;
+               }
+            }
+         }
+         mIsClipping = false;
+         mFirstPt = new ();
+         InvalidateVisual ();
+      };
+      MouseLeftButtonDown += (s, e) => mFirstPt = e.GetPosition (this).Transform (mIPXfm);
       SizeChanged += (s, e) => ZoomExtents ();
       #endregion
 
@@ -89,6 +111,7 @@ internal sealed class Viewport : Canvas {
 
    // Updates the snap point and current mouse point on the viewport
    void OnMouseMove (object sender, MouseEventArgs e) {
+      mIsClipping = e.LeftButton is MouseButtonState.Pressed;
       mMousePt = e.GetPosition (this).Transform (mIPXfm);
       mSnapPt = new Point2 ();
       if (mSnapSource != null && mMousePt.HasNeighbour (mSnapSource, mSnapDelta, out var pt)) {
@@ -112,11 +135,17 @@ internal sealed class Viewport : Canvas {
 
    protected override void OnRender (DrawingContext dc) {
       dc.PushClip (new RectangleGeometry (mVRect)); // Keeps drawing inside viewport bounds
-      //dc.DrawRectangle (Brushes.LightGray, mBGPen, mVRect);
+      if (mIsClipping && mFirstPt.IsSet) {
+         var (start, end) = (Transform (mFirstPt), Transform (mMousePt));
+         dc.DrawRectangle (Brushes.GhostWhite, mBGPen, new Rect (start, end));
+      }
       if (mPart is null) return;
-      var v = new Vector2 (mPart.Bound.MaxX + 10, 0.0);
-      foreach (var l in mPart!.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint), Transform (l.EndPoint));
-      foreach (var l in mPart!.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint), Transform (l.EndPoint));
+      var v = new Vector2 (mPart.Bound.MaxX + 50, 0.0);
+      foreach (var l in mPart.PLines) {
+         var pen = l.IsSelected ? new Pen (Brushes.WhiteSmoke, 2.0) : mPLPen;
+         dc.DrawLine (pen, Transform (l.StartPoint), Transform (l.EndPoint));
+      }
+      foreach (var l in mPart.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint), Transform (l.EndPoint));
       if (mProcessedPart != null) {
          foreach (var l in mProcessedPart.PLines) dc.DrawLine (mPLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
          foreach (var l in mProcessedPart.BendLines) dc.DrawLine (mBLPen, Transform (l.StartPoint + v), Transform (l.EndPoint + v));
@@ -135,7 +164,7 @@ internal sealed class Viewport : Canvas {
    void UpdateBound () {
       if (mPart is null) return;
       List<Point2> boundPts = [];
-      var vec = new Vector2 (mPart.Bound.MaxX * 1.25, 0.0);
+      var vec = new Vector2 (mPart.Bound.MaxX * 2, 0.0);
       if (mPart != null) boundPts.AddRange (mPart.Vertices);
       if (mProcessedPart != null) boundPts.AddRange (mProcessedPart.Vertices.Select (v => v + vec));
       if (boundPts.Count > 2) UpdatePXfm (new Bound2 (boundPts));
@@ -160,10 +189,12 @@ internal sealed class Viewport : Canvas {
    #endregion
 
    #region Private Data ---------------------------------------------
+   EMode mCurrentMode;
+   bool mIsClipping;
    double mWidth, mHeight, mMargin, mSnapDelta; // Viewport width, height, margin, snap tolreance
    Bound2 mVBound; // ViewportBound;
    Point mCenter; // Viewport center
-   Point2 mMousePt, mSnapPt; // Current mouse point, Current snap point
+   Point2 mMousePt, mSnapPt, mFirstPt; // Current mouse point, Current snap point
    Rect mVRect; // Viewport rectangle
    Matrix mPXfm, mIPXfm; // Projection transform, Inverse projection transform
    Pen? mBGPen, mBLPen, mPLPen; // Pen for Background, BendLine, PLine

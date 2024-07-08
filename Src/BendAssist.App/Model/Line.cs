@@ -86,6 +86,10 @@ public sealed class PLine : Line {
       UpdateProperties ();
    }
    #endregion
+
+   #region Properties -----------------------------------------------
+   public bool IsSelected { get; set; }
+   #endregion
 }
 #endregion
 
