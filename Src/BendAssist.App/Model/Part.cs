@@ -45,13 +45,13 @@ public class Part {
       var index = 1;
       foreach (var l in PLines.OrderBy (l => l.Index)) {
          var matchingPline = plines.FirstOrDefault (x => x.StartPoint.IsEqual (l.EndPoint));    // Finds if the point is already present in the list
-         var startPoint = l.StartPoint.Duplicate (index);
+         var startPoint = l.StartPoint.WithIndex (index);
          // Assigns the point with previous index if already present in the list
-         var endPoint = matchingPline != null ? l.EndPoint.Duplicate (matchingPline.StartPoint.Index) : l.EndPoint.Duplicate (++index);
+         var endPoint = matchingPline != null ? l.EndPoint.WithIndex (matchingPline.StartPoint.Index) : l.EndPoint.WithIndex (++index);
          plines.Add (new (startPoint, endPoint, l.Index));
       }
       foreach (var l in BendLines.OrderBy (l => l.Index))
-         blines.Add (new (l.StartPoint.Duplicate (++index), l.EndPoint.Duplicate (++index), l.Index, l.BLInfo));
+         blines.Add (new (l.StartPoint.WithIndex (++index), l.EndPoint.WithIndex (++index), l.Index, l.BLInfo));
       return new Part (plines, blines);
    }
    #endregion

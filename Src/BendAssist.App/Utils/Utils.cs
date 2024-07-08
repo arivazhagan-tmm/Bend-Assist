@@ -97,11 +97,11 @@ public static class BendUtils {
          var line = lines[i];
          var (startPt, endPt) = (line.StartPoint, line.EndPoint);
          if (i == index) {
-            tmp[i] = new (l.StartPoint.Duplicate (ptIndex), l.EndPoint.Duplicate (++ptIndex), i++);
+            tmp[i] = new (l.StartPoint.WithIndex (ptIndex), l.EndPoint.WithIndex (++ptIndex), i++);
             inserted = true;
          }
          tmp[i] = !inserted ? new (startPt, endPt, i++)
-                            : new (startPt.Duplicate (ptIndex), endPt.Duplicate (++ptIndex), i++);
+                            : new (startPt.WithIndex (ptIndex), endPt.WithIndex (++ptIndex), i++);
          ptIndex = line.EndPoint.Index;
       }
       return [.. tmp];
