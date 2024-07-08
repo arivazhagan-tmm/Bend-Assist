@@ -136,6 +136,8 @@ public static class BendUtils {
       return connectedLines.Count > 1;
    }
 
+   public static bool IsInside (this Line l, Bound2 b) => l.StartPoint.IsWithinBound(b) && l.EndPoint.IsWithinBound(b);
+
    /// <summary>Checks whether a point is within the bound</summary>
    public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X < b.MaxX && p.X > b.MinX && p.Y < b.MaxY && p.Y > b.MinY;
 

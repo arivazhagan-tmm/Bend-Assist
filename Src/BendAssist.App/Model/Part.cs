@@ -13,6 +13,7 @@ public class Part {
       Area = Vertices.Area ();
       Centroid = Vertices.Centroid ();
       Bound = new Bound2 (Vertices);
+      Hull = Vertices.ConvexHull ();
       var blVertices = new List<Point2> ();
       BendLines.ForEach (l => blVertices.AddRange ([l.StartPoint, l.EndPoint]));
       Vertices.AddRange (blVertices);
