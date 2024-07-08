@@ -10,10 +10,10 @@ public class Part {
       BendLines = [.. bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X)];
       (Vertices, Hull, AssistInfo) = ([], [], []);
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
-      Area = Vertices.Area ();
-      Centroid = Vertices.Centroid ();
-      Bound = new Bound2 (Vertices);
       Hull = Vertices.ConvexHull ();
+      Area = Hull.Area ();
+      Centroid = Hull.Centroid ();
+      Bound = new Bound2 (Hull);
       var blVertices = new List<Point2> ();
       BendLines.ForEach (l => blVertices.AddRange ([l.StartPoint, l.EndPoint]));
       Vertices.AddRange (blVertices);
@@ -27,8 +27,7 @@ public class Part {
             foreach (var cl in connectedLines)
                if (cl is BendLine) blIndices.Add (cl.Index); else plIndices.Add (cl.Index);
             var count = blIndices.Count;
-            if (count is 1)
-               AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.BendRelief));
+            if (count is 1) AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.BendRelief));
             else if (count is 2) {
                AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerClose));
                AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerRelief));

@@ -48,7 +48,7 @@ public static class BendUtils {
       var (p1, p2) = (p.StartPoint, p.EndPoint);
       var theta = p1.AngleTo (p2);
       var (t1, t2, offset) = (theta + 90, theta - 90, 2.0);
-      return new Bound2 ([p1.RadialMove (offset, t1), p1.RadialMove (offset, t2), p2.RadialMove (offset, t1), p2.RadialMove (offset, t2)]);
+      return new Bound2 ([p1.RadialMoved (offset, t1), p1.RadialMoved (offset, t2), p2.RadialMoved (offset, t1), p2.RadialMoved (offset, t2)]);
    }
 
    /// <summary>Creates and returns the list of connected plines with the given points.</summary>

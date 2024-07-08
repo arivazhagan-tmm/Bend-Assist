@@ -37,8 +37,8 @@ public sealed class BendRelief : BendAssist {
                   translateAngle1 = vertex.X < center.X ? angle - 90 : angle + 90;
                   translateAngle2 = vertex.Y < center.Y ? angle + 180 : angle;
                }
-               p2 = vertex.RadialMove (brHeight, translateAngle1);
-               p3 = p2.RadialMove (brWidth, translateAngle2);
+               p2 = vertex.RadialMoved (brHeight, translateAngle1);
+               p3 = p2.RadialMoved (brWidth, translateAngle2);
                p4 = FindIntersectPoint (nearBaseEdge, p3, translateAngle1);
                pLines.Remove (nearBaseEdge);
                Point2[] pts = vertex.IsEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1] : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
@@ -53,7 +53,7 @@ public sealed class BendRelief : BendAssist {
    #region Implementation ------------------------------------------
    /// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
    Point2 FindIntersectPoint (PLine pLine, Point2 p, double angle) {
-      Point2 p1 = p.RadialMove (1, angle);
+      Point2 p1 = p.RadialMoved (1, angle);
       (double startX, double startY) = (pLine.StartPoint.X, pLine.StartPoint.Y);
       (double slope1, double slope2) = ((p1.Y - p.Y) / (p1.X - p.X), (pLine.EndPoint.Y - startY) / (pLine.EndPoint.X - startX));
       (double intercept1, double intercept2) = (p.Y - slope1 * p.X, startY - slope2 * startX);

@@ -18,7 +18,7 @@ public readonly struct Point2 {
    /// <summary>Index of the point</summary>
    public readonly int Index;
    /// <summary>Returns true if the point ordinates have valid values</summary>
-   public bool IsSet => !double.IsNaN (Y) && !double.IsNaN (Y);
+   public bool IsSet => !double.IsNaN (X) && !double.IsNaN (Y);
    #endregion
 
    #region Methods --------------------------------------------------
@@ -51,7 +51,7 @@ public readonly struct Point2 {
    }
 
    /// <summary>Radially moves the point to distance at theta in degrees</summary>
-   public Point2 RadialMove (double distance, double theta) {
+   public Point2 RadialMoved (double distance, double theta) {
       var (sin, cos) = SinCos (theta.ToRadians ());
       return new Point2 (X + distance * cos, Y + distance * sin);
    }
