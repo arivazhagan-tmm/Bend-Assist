@@ -56,7 +56,7 @@ public readonly struct Point2 {
       return new Point2 (X + distance * cos, Y + distance * sin);
    }
 
-   public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
+   public override string ToString () => $"{X:F9},{Y:F9}";
 
    /// <summary>Translation with dx and dy from the vector v</summary>
    public Point2 Translated (Vector2 v) => this + v;

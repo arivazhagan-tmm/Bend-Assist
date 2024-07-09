@@ -139,7 +139,7 @@ public static class BendUtils {
    public static bool IsInside (this Line l, Bound2 b) => l.StartPoint.IsWithinBound(b) && l.EndPoint.IsWithinBound(b);
 
    /// <summary>Checks whether a point is within the bound</summary>
-   public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X < b.MaxX && p.X > b.MinX && p.Y < b.MaxY && p.Y > b.MinY;
+   public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X <= b.MaxX && p.X >= b.MinX && p.Y <= b.MaxY && p.Y >= b.MinY;
 
    /// <summary>Orientation of the point based on the previous two points</summary>
    public static int Orientation (Point2 p, Point2 q, Point2 r) {

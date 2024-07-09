@@ -9,6 +9,7 @@ public class Part {
       (PLines, BendLines, Thickness) = (plines, bendLines, thickeness);
       BendLines = [.. bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X)];
       (Vertices, Hull, AssistInfo) = ([], [], []);
+      PLines= [.. plines.OrderBy (l => l.Index)];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
       Hull = Vertices.ConvexHull ();
       Area = Hull.Area ();
@@ -34,24 +35,6 @@ public class Part {
             }
          }
       }
-   }
-   #endregion
-
-   #region Methods --------------------------------------------------
-   /// <summary>Regenerates the part by re-arranging the plines and vertices</summary>
-   public Part Regen () {
-      List<PLine> plines = []; List<BendLine> blines = [];
-      var index = 1;
-      foreach (var l in PLines.OrderBy (l => l.Index)) {
-         var matchingPline = plines.FirstOrDefault (x => x.StartPoint.IsEqual (l.EndPoint));    // Finds if the point is already present in the list
-         var startPoint = l.StartPoint.WithIndex (index);
-         // Assigns the point with previous index if already present in the list
-         var endPoint = matchingPline != null ? l.EndPoint.WithIndex (matchingPline.StartPoint.Index) : l.EndPoint.WithIndex (++index);
-         plines.Add (new (startPoint, endPoint, l.Index));
-      }
-      foreach (var l in BendLines.OrderBy (l => l.Index))
-         blines.Add (new (l.StartPoint.WithIndex (++index), l.EndPoint.WithIndex (++index), l.Index, l.BLInfo));
-      return new Part (plines, blines);
    }
    #endregion
 
