@@ -184,6 +184,11 @@ public static class CommonUtils {
       var result = Regex.Split (str, @"(?=[A-Z])");
       return string.Join (" ", result);
    }
+
+   /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
+   public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
+   /// <summary>Clamps the given double to the range 0..1</summary>
+   public static double Clamp (this double a) => a < 0 ? 0 : (a > 1 ? 1 : a);
    #endregion
 
    #region Private Data ---------------------------------------------
