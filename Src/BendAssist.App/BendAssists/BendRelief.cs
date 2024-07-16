@@ -12,15 +12,15 @@ public sealed class BendRelief : BendAssist {
    #region Methods -------------------------------------------------
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
-      if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) { mAssistError = "Cannot apply Bend relief"; return; }
-      mCommonVertices = [..mPart.Vertices.GroupBy (p => p).Where (p => p.Count () == 2).Select (g => g.Key)
-                       .Where (x => x.IsWithinBound (mPart.Bound))]; // Get vertices which are common to bend line points and also within the profile bound
-      if (mCommonVertices.Count < 1) { mAssistError = "Cannot apply Bend relief"; return; }
+      if (mPart is null || mPart.AssistInfo.Count == 0) { mAssistError = "Cannot apply Bend relief"; return; }
+      //if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) { mAssistError = "Cannot apply Bend relief"; return; }
+      List<AssistInfo> assist = [.. mPart.AssistInfo.Where (x => x.ReqAssist == EBendAssist.BendRelief)];
+      if (assist.Count <= 0) { mAssistError = "Cannot apply Bend relief"; return; }
       List<PLine> pLines = [.. mPart.PLines];
-      foreach (var vertex in mCommonVertices) {
+      foreach (var relief in assist) {
+         Point2 vertex = mPart.Vertices.Where (x => x.Index == relief.Vertex).First ();
          BendLine bl = mPart.BendLines.Where (x => x.HasVertex (vertex)).First ();
-         List<PLine>? connectedLines = [.. pLines.Where (x => x.HasVertex (vertex))];
-         if (connectedLines.Count is 0) { mAssistError = "Cannot apply Bend relief"; return; }
+         List<PLine> connectedLines = [.. pLines.Where (x => x.HasVertex (vertex))];
          Point2 p1 = vertex, p2, p3, p4;
          (float bendAngle, float radius, float deduction) = bl.BLInfo;
          // Calculating the bend relief height from bend allownace or flat width
@@ -72,7 +72,6 @@ public sealed class BendRelief : BendAssist {
    #endregion
 
    #region Private --------------------------------------------------
-   List<Point2>? mCommonVertices = [];
    readonly Point2 mCenter;
    #endregion
 }

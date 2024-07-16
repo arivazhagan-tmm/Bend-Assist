@@ -5,11 +5,11 @@ namespace BendAssist.App.Model;
 #region class Part --------------------------------------------------------------------------------
 public class Part {
    #region Constructors ---------------------------------------------
-   public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 2f) {
-      (PLines, BendLines, Thickness) = (plines, bendLines, thickeness);
+   public Part (List<PLine> plines, List<BendLine> bendLines, float thickness = 2f) {
+      (PLines, BendLines, Thickness) = (plines, bendLines, thickness);
       BendLines = [.. bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X)];
       (Vertices, Hull, AssistInfo) = ([], [], []);
-      PLines= [.. plines.OrderBy (l => l.Index)];
+      PLines = [.. plines.OrderBy (l => l.Index)];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
       Hull = Vertices.ConvexHull ();
       Area = Hull.Area ();
