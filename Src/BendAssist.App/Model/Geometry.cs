@@ -39,11 +39,6 @@ public readonly struct Point2 {
       return Sqrt (dx * dx + dy * dy);
    }
 
-   /// <summary>Returns the perpendicular distance between this point and the inifinite line a..b</summary>
-   public double DistToLine (Point2 a, Point2 b) => DistanceTo (SnappedToLine (a, b));
-   /// <summary>Returns the closest distance between this point and the finite line segment a..b</summary>
-   public double DistToLineSeg (Point2 a, Point2 b) => DistanceTo (SnappedToLineSeg (a, b));
-
    /// <summary>Copy of the point with custom index</summary>
    public Point2 WithIndex (int index) => new (X, Y, index);
 
@@ -61,25 +56,7 @@ public readonly struct Point2 {
       return new Point2 (X + distance * cos, Y + distance * sin);
    }
 
-   /// <summary>Returns the closest point on the given line a..b</summary>
-   /// If the points a and b are the same, this just returns a
-   public Point2 SnappedToLine (Point2 a, Point2 b) => SnapHelper (a, b, false);
-   /// <summary>Returns the closest point to the given _finite_ line segment a..b</summary>
-   public Point2 SnappedToLineSeg (Point2 a, Point2 b) => SnapHelper (a, b, true);
-
-   // Helper used by SnappedToLine and SnappedToLineSeg
-   Point2 SnapHelper (Point2 a, Point2 b, bool clamp) {
-      var (dx, dy) = (b.X - a.X, b.Y - a.Y);
-      double scale = 1 / (dx * dx + dy * dy);
-      if (double.IsInfinity (scale)) return a;
-      // Use the parametric form of the line equation, and compute
-      // the 'parameter t' of the closest point
-      double t = ((X - a.X) * dx + (Y - a.Y) * dy) * scale;
-      if (clamp) t = t.Clamp ();
-      return new (a.X + t * dx, a.Y + t * dy);
-   }
-
-   public override string? ToString () => $"({X.Round ()}, {Y.Round ()})";
+   public override string ToString () => $"{X:F9},{Y:F9}";
 
    /// <summary>Translation with dx and dy from the vector v</summary>
    public Point2 Translated (Vector2 v) => this + v;
