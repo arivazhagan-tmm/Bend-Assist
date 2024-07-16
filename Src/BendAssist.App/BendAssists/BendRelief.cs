@@ -22,21 +22,23 @@ public sealed class BendRelief : BendAssist {
          List<PLine>? connectedLines = [.. pLines.Where (x => x.HasVertex (vertex))];
          if (connectedLines.Count is 0) { mAssistError = "Cannot apply Bend relief"; return; }
          Point2 p1 = vertex, p2, p3, p4;
-         (float blAngle, float radius, float deduction) = bl.BLInfo;
+         (float bendAngle, float radius, float deduction) = bl.BLInfo;
          // Calculating the bend relief height from bend allownace or flat width
-         double brHeight = BendUtils.GetBendAllowance ((double)blAngle, 0.38, mPart.Thickness, radius) / 2;
-         double brWidth = mPart.Thickness / 2; // Calculating bend relief width from part thickness 
+         double brHeight = BendUtils.GetBendAllowance ((double)bendAngle, 0.38, mPart.Thickness, radius) / 2;
+         // Calculating bend relief width from part thickness
+         double brWidth = mPart.Thickness / 2;
          double angle = bl.Angle;
          bool IsHorizontalRange = (angle > 135 && angle < 225) || (angle < 45 && angle >= 0) || (angle > 315 && angle <= 360);
-         bool IsVerticalRange = (angle >= 45 && angle <= 135) || (angle <= 315 && angle >= 225);
-         PLine nearBaseEdge = GetNearBaseEdge (connectedLines, vertex, IsHorizontalRange, IsVerticalRange); // Get the near base edge where relief edges will be inserted
+         // Get the near base edge where relief edges will be inserted
+         PLine nearBaseEdge = GetNearBaseEdge (connectedLines, vertex, IsHorizontalRange);
          angle = angle switch { 180 => 0, 270 => 90, _ => bl.Angle, };
-         (double translateAngle1, double translateAngle2) = GetTranslateAngles (vertex, angle, IsHorizontalRange, IsVerticalRange);
+         (double translateAngle1, double translateAngle2) = GetTranslateAngles (vertex, angle, IsHorizontalRange);
          p2 = vertex.RadialMoved (brHeight, translateAngle1);
          p3 = p2.RadialMoved (brWidth, translateAngle2);
          p4 = p3.RadialMoved (p3.DistToLine (nearBaseEdge.StartPoint, nearBaseEdge.EndPoint), translateAngle1 - 180);
          pLines.Remove (nearBaseEdge);
-         Point2[] pts = vertex.IsEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1] : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
+         Point2[] pts = vertex.IsEqual (nearBaseEdge.EndPoint) ? [nearBaseEdge.StartPoint, p4, p3, p2, p1]
+                                                               : [p1, p2, p3, p4, nearBaseEdge.EndPoint];
          pLines.AddRange (BendUtils.CreateConnectedPLines (nearBaseEdge.Index, pts));
       }
       mProcessedPart = new ProcessedPart (pLines, mPart.BendLines, (float)mPart.Thickness, EBendAssist.BendRelief);
@@ -58,28 +60,15 @@ public sealed class BendRelief : BendAssist {
    //   };
    //}
 
-   PLine GetNearBaseEdge (List<PLine> connectedLines, Point2 vertex, bool IsHorizontalRange, bool IsVerticalRange) {
-      if (IsHorizontalRange)
-         return (vertex.X < mCenter.X && vertex.Y > mCenter.Y) || (vertex.X > mCenter.X && vertex.Y < mCenter.Y)
+   PLine GetNearBaseEdge (List<PLine> connectedLines, Point2 vertex, bool IsHorizontalRange) => IsHorizontalRange
+         ? (vertex.X < mCenter.X && vertex.Y > mCenter.Y) || (vertex.X > mCenter.X && vertex.Y < mCenter.Y)
+            ? connectedLines[1] : connectedLines.First ()
+         : (vertex.Y < mCenter.Y && vertex.X < mCenter.X) || (vertex.X > mCenter.X && vertex.Y > mCenter.Y)
             ? connectedLines[1] : connectedLines.First ();
-      if (IsVerticalRange)
-         return (vertex.Y < mCenter.Y && vertex.X < mCenter.X) || (vertex.X > mCenter.X && vertex.Y > mCenter.Y)
-            ? connectedLines[1] : connectedLines.First ();
-      return null!;
-   }
 
-   Tuple<double, double> GetTranslateAngles (Point2 vertex, double angle, bool IsHorizontalRange, bool IsVerticalRange) {
-      double translateAngle1 = default, translateAngle2 = default;
-      if (IsHorizontalRange) {
-         translateAngle1 = vertex.Y > mCenter.Y ? angle + 270 : angle + 90;
-         translateAngle2 = vertex.X < mCenter.X ? angle + 180 : angle;
-      }
-      if (IsVerticalRange) {
-         translateAngle1 = vertex.X > mCenter.X ? angle + 90 : angle - 90;
-         translateAngle2 = vertex.Y < mCenter.Y ? angle + 180 : angle;
-      }
-      return new Tuple<double, double> (translateAngle1, translateAngle2);
-   }
+   Tuple<double, double> GetTranslateAngles (Point2 vertex, double angle, bool IsHorizontalRange) => IsHorizontalRange
+         ? new Tuple<double, double> (vertex.Y > mCenter.Y ? angle + 270 : angle + 90, vertex.X < mCenter.X ? angle + 180 : angle)
+         : new Tuple<double, double> (vertex.X > mCenter.X ? angle + 90 : angle - 90, vertex.Y < mCenter.Y ? angle + 180 : angle);
    #endregion
 
    #region Private --------------------------------------------------
