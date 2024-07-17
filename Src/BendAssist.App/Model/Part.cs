@@ -5,11 +5,11 @@ namespace BendAssist.App.Model;
 #region class Part --------------------------------------------------------------------------------
 public class Part {
    #region Constructors ---------------------------------------------
-   public Part (List<PLine> plines, List<BendLine> bendLines, float thickeness = 2f) {
-      (PLines, BendLines, Thickness) = (plines, bendLines, thickeness);
+   public Part (List<PLine> plines, List<BendLine> bendLines, float thickness = 2f) {
+      (PLines, BendLines, Thickness) = (plines, bendLines, thickness);
       BendLines = [.. bendLines.OrderBy (bl => bl.StartPoint.Y).ThenBy (bl => bl.StartPoint.X)];
       (Vertices, Hull, AssistInfo) = ([], [], []);
-      PLines= [.. plines.OrderBy (l => l.Index)];
+      PLines = [.. plines.OrderBy (l => l.Index)];
       PLines.ForEach (l => Vertices.Add (l.StartPoint));
       Hull = Vertices.ConvexHull ();
       Area = Hull.Area ();
@@ -26,10 +26,10 @@ public class Part {
          if (v.IsCommonVertex (lines, out var connectedLines) && connectedLines.Count > 2) {
             List<int> plIndices = [], blIndices = [];
             foreach (var cl in connectedLines)
-               if (cl is BendLine) blIndices.Add (cl.Index); else plIndices.Add (cl.Index);
+               if (cl is BendLine bl) { blIndices.Add (cl.Index); } else plIndices.Add (cl.Index);
             var count = blIndices.Count;
             if (count is 1) AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.BendRelief));
-            else if (count is 2) {
+            else if (count is 2 && connectedLines.All (l => l.Orientation != EOrientation.Inclined)) {
                AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerClose));
                AssistInfo.Add (new (v.Index, [.. plIndices], [.. blIndices], EBendAssist.CornerRelief));
             }
@@ -64,5 +64,5 @@ public sealed class ProcessedPart (List<PLine> plines, List<BendLine> bendLines,
 #region struct AssistInfo -------------------------------------------------------------------------
 /// <summary>A struct to store the information of the bend assist for the imported part.</summary>
 /// Stores the indices of vertices, plines and bendlines which requires the bend assist
-public readonly record struct AssistInfo (int Vertex, int[] PLIndices, int[] BLIndieces, EBendAssist ReqAssist);
+public readonly record struct AssistInfo (int VIndex, int[] PLIndices, int[] BLIndices, EBendAssist ReqAssist);
 #endregion
