@@ -46,25 +46,11 @@ public sealed class BendRelief : BendAssist {
    #endregion
 
    #region Implementation ------------------------------------------
-   ///// <summary>Find a point of intersection for given line and a line drawn at given angle from other point</summary>
-   //Point2 FindIntersectPoint (PLine pLine, Point2 p, double angle) {
-   //   Point2 p1 = p.RadialMoved (1, angle);
-   //   (double startX, double startY) = (pLine.StartPoint.X, pLine.StartPoint.Y);
-   //   (double slope1, double slope2) = ((p1.Y - p.Y) / (p1.X - p.X), (pLine.EndPoint.Y - startY) / (pLine.EndPoint.X - startX));
-   //   (double intercept1, double intercept2) = (p.Y - slope1 * p.X, startY - slope2 * startX);
-   //   double commonX = intercept2 - intercept1 / slope1 - slope2;
-   //   return (slope1, slope2) switch {
-   //      (double.NegativeInfinity or double.PositiveInfinity, 0) => new Point2 (p.X, startY),
-   //      (0, double.NegativeInfinity or double.PositiveInfinity) => new Point2 (startX, p.Y),
-   //      _ => new Point2 (commonX, slope1 * commonX + intercept1)
-   //   };
-   //}
-
    PLine GetNearBaseEdge (List<PLine> connectedLines, Point2 vertex, bool IsHorizontalRange) => IsHorizontalRange
          ? (vertex.X < mCenter.X && vertex.Y > mCenter.Y) || (vertex.X > mCenter.X && vertex.Y < mCenter.Y)
-            ? connectedLines[1] : connectedLines.First ()
+            ? connectedLines[1] : connectedLines[0]
          : (vertex.Y < mCenter.Y && vertex.X < mCenter.X) || (vertex.X > mCenter.X && vertex.Y > mCenter.Y)
-            ? connectedLines[1] : connectedLines.First ();
+            ? connectedLines[1] : connectedLines[0];
 
    Tuple<double, double> GetTranslateAngles (Point2 vertex, double angle, bool IsHorizontalRange) => IsHorizontalRange
          ? new Tuple<double, double> (vertex.Y > mCenter.Y ? angle + 270 : angle + 90, vertex.X < mCenter.X ? angle + 180 : angle)
