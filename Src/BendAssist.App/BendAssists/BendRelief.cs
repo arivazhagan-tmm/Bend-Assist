@@ -13,12 +13,11 @@ public sealed class BendRelief : BendAssist {
    /// <summary>Applies bend relief for the given part</summary>
    public override void Execute () {
       if (mPart is null || mPart.AssistInfo.Count == 0) { mAssistError = "Cannot apply Bend relief"; return; }
-      //if (mPart is null || mPart.BendLines is null || mPart.BendLines.Count is 0) { mAssistError = "Cannot apply Bend relief"; return; }
       List<AssistInfo> assist = [.. mPart.AssistInfo.Where (x => x.ReqAssist == EBendAssist.BendRelief)];
       if (assist.Count <= 0) { mAssistError = "Cannot apply Bend relief"; return; }
       List<PLine> pLines = [.. mPart.PLines];
       foreach (var relief in assist) {
-         Point2 vertex = mPart.Vertices.Where (x => x.Index == relief.Vertex).First ();
+         Point2 vertex = mPart.Vertices.Where (x => x.Index == relief.VIndex).First ();
          BendLine bl = mPart.BendLines.Where (x => x.HasVertex (vertex)).First ();
          List<PLine> connectedLines = [.. pLines.Where (x => x.HasVertex (vertex))];
          Point2 p1 = vertex, p2, p3, p4;
