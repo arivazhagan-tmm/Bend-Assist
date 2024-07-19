@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using BendAssist.App.Model;
 using System.Text.RegularExpressions;
+using BendAssist.App.BendAssists;
 
 namespace BendAssist.App.Utils;
 
@@ -183,6 +184,16 @@ public static class CommonUtils {
    public static string AddSpace (this string str) {
       var result = Regex.Split (str, @"(?=[A-Z])");
       return string.Join (" ", result);
+   }
+
+   /// <summary>Finds a quadrant of the given point using the reference point</summary>
+   public static IQuadrant Quadrant (this Point2 p, Point2 refPoint) {
+      var (x, y, cx, cy) = (p.X, p.Y, refPoint.X, refPoint.Y);
+      if (cx < x && cy < y) return IQuadrant.I;
+      else if (cx > x && cy < y) return IQuadrant.II;
+      else if (cx > x && cy > y) return IQuadrant.III;
+      else if (cx < x && cy > y) return IQuadrant.IV;
+      return IQuadrant.None;
    }
    #endregion
 
