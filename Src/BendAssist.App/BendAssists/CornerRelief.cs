@@ -1,5 +1,6 @@
 ﻿using BendAssist.App.Model;
 using BendAssist.App.Utils;
+using System;
 
 namespace BendAssist.App.BendAssists;
 
@@ -38,23 +39,17 @@ public sealed class CornerRelief : BendAssist {
          }
          if (quadrant is IQuadrant.III or IQuadrant.IV) (v1, v2, v3) = (v1 * -1.0, v2 * -1.0, v3 * -1.0);
          (p1, p2, p3) = (vertex + v1, vertex + v2, vertex + v3);
-         int firstIndex = info.PLIndices.First (), lastIndex = info.PLIndices.Last ();
-         var plines = mPart.PLines.Where (p => p.Index == firstIndex || p.Index == lastIndex);
+         int index1 = info.PLIndices.First (), index2 = info.PLIndices.Last ();
+         var plines = mPart.PLines.Where (p => p.Index == index1 || p.Index == index2);
          var pl1 = (PLine)plines.First ().Trimmed (endDx: eDx, endDy: eDy);
          var pl2 = (PLine)plines.Last ().Trimmed (startDx: sDx, startDy: sDy);
-         initialPlines = UpdatePlines (initialPlines, p1, p2, p3, pl1.Index, pl2.Index, pl1, pl2);
+         var pl3 = new PLine (p1, p2, index1);
+         var pl4 = new PLine (p2, p3, index2);
+         initialPlines = initialPlines.Where (p => p.Index != index1 && p.Index != index2).ToList ();
+         initialPlines.InsertRange (index1 - 1, [pl1, pl2, pl3, pl4]);
       }
       if (assisted)
          mProcessedPart = new ProcessedPart (initialPlines, mPart.BendLines, 2f, EBendAssist.CornerRelief);
-
-      /// <summary>Get a new list of plines for corner relief.</summary>
-      List<PLine> UpdatePlines (List<PLine> plines, Point2 p1, Point2 p2, Point2 p3, int index1,
-         int index2, PLine pline1, PLine pline2) {
-         PLine newpline1 = new (p1, p2, index1), newpline2 = new (p2, p3, index2);
-         plines = plines.Where (x => x.Index != index1 && x.Index != index2).ToList ();
-         plines.InsertRange (index1 - 1, [pline1, newpline1, newpline2, pline2]);
-         return plines;
-      }
    }
    #endregion
 
