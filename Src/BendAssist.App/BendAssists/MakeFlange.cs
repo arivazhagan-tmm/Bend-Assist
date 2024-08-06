@@ -24,39 +24,46 @@ public sealed class MakeFlange : BendAssist {
    /// Creates a bend line with the given angle.
    public override void Execute () {
       if (mPart == null) return;
-      int index = 1;
-      List<PLine> pLines = []; List<BendLine> bendLines = [];
-      foreach (var bendline in mPart.BendLines) bendLines.Add (bendline);
+      foreach (var bendline in mPart.BendLines) mBendLines.Add (bendline);
+      bool anySelected = mPart.PLines.Any (x => x.IsSelected);
       foreach (var pline in mPart.PLines) {
-         if (mPart.BendLines.Any (x => x.StartPoint.IsWithinBound (pline.Bound) || x.EndPoint.IsWithinBound (pline.Bound))) {
-            pLines.Add (pline);
-            continue;
-         }
-         var (startPt, endPt) = (pline.StartPoint, pline.EndPoint);
-         // Radially moves the point perpendicular to the selected pline
-         var angle = CommonUtils.ToRadians (pline.Angle - 90);
-         var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, mPart.Thickness, mRadius);
-         var height = mHeight;
-         height -= bendDeduction / 2; // Gets the bend deducted height of the flange
-         // Calculates the offsets in x and y
-         var (sin, cos) = Math.SinCos (angle);
-         var (dx, dy) = (height * cos, height * sin);
-         // Translates the line with the offset values
-         var translatedLine = (PLine)pline.Translated (dx, dy);
-         var (tStart, tEnd) = (translatedLine.StartPoint, translatedLine.EndPoint);
-         pLines.Add (new (startPt, tStart, index++));
-         pLines.Add (new (tStart, tEnd, index++));
-         pLines.Add (new (tEnd, endPt, index++));
-         var count = mPart.BendLines.Count;
-         // Bend line is created at the previous position of the selected pline
-         // This bend line is added to the last of the list with index as count+1
-         bendLines?.Add (new BendLine (startPt, endPt, count > 0 ? count + 1 : 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
+         if (anySelected) {
+            if (pline.IsSelected) GetFlange (pline);
+            else mPLines.Add (new PLine (pline.StartPoint, pline.EndPoint, mIndex++));
+         } else GetFlange (pline);
       }
-      if (pLines != null && bendLines != null) mProcessedPart = new (pLines, bendLines, mRadius, EBendAssist.AddFlange);
+      if (mPLines != null && mBendLines != null) mProcessedPart = new (mPLines, mBendLines, mRadius, EBendAssist.AddFlange);
+   }
+
+   void GetFlange (PLine pline) {
+      if (mPart!.BendLines.Any (x => x.StartPoint.IsWithinBound (pline.Bound) || x.EndPoint.IsWithinBound (pline.Bound))) {
+         mPLines.Add (pline);
+         return;
+      }
+      var (startPt, endPt) = (pline.StartPoint, pline.EndPoint);
+      // Radially moves the point perpendicular to the selected pline
+      var angle = CommonUtils.ToRadians (pline.Angle - 90);
+      var bendDeduction = BendUtils.GetBendDeduction (mBendAngle, 0.38, mPart.Thickness, mRadius);
+      var height = mHeight;
+      height -= bendDeduction / 2; // Gets the bend deducted height of the flange
+      var (sin, cos) = Math.SinCos (angle);
+      var (dx, dy) = (height * cos, height * sin); // Calculates the offsets in x and y
+      // Translates the line with the offset values
+      var translatedLine = (PLine)pline.Translated (dx, dy);
+      var (tStart, tEnd) = (translatedLine.StartPoint, translatedLine.EndPoint);
+      mPLines.Add (new (startPt, tStart, mIndex++));
+      mPLines.Add (new (tStart, tEnd, mIndex++));
+      mPLines.Add (new (tEnd, endPt, mIndex++));
+      var count = mPart.BendLines.Count;
+      // Bend line is created at the previous position of the selected pline
+      // This bend line is added to the last of the list with index as count+1
+      mBendLines?.Add (new BendLine (startPt, endPt, count > 0 ? count + 1 : 1, new BendLineInfo (mBendAngle, mRadius, (float)bendDeduction)));
    }
    #endregion
 
    #region Private Data ---------------------------------------------
+   List<PLine> mPLines = []; List<BendLine> mBendLines = [];
+   int mIndex = 1;
    double mHeight = 10;    // Height of the flange
    readonly float mBendAngle = 90;    // Bend angle of flange
    readonly PLine? mPline;    // Selected pline
