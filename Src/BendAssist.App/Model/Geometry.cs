@@ -1,5 +1,6 @@
 ﻿using static System.Math;
 using BendAssist.App.Utils;
+using System.CodeDom;
 
 namespace BendAssist.App.Model;
 
@@ -96,7 +97,11 @@ public readonly struct Point2 {
 #endregion
 
 #region struct Vector2 ----------------------------------------------------------------------------
-public readonly record struct Vector2 (double DX, double DY);
+public readonly record struct Vector2 (double DX, double DY) {
+   #region Operators ------------------------------------------------
+   public static Vector2 operator * (Vector2 v, double f) => new (v.DX * f, v.DY * f);
+   #endregion
+}
 #endregion
 
 #region struct Bound2 -----------------------------------------------------------------------------

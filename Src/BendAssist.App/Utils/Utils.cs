@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using BendAssist.App.Model;
 using System.Text.RegularExpressions;
+using BendAssist.App.BendAssists;
 
 namespace BendAssist.App.Utils;
 
@@ -185,10 +186,15 @@ public static class CommonUtils {
       return string.Join (" ", result);
    }
 
-   /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
-   public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
-   /// <summary>Clamps the given double to the range 0..1</summary>
-   public static double Clamp (this double a) => a < 0 ? 0 : (a > 1 ? 1 : a);
+   /// <summary>Finds a quadrant of the given point using the reference point</summary>
+   public static IQuadrant Quadrant (this Point2 p, Point2 refPoint) {
+      var (x, y, cx, cy) = (p.X, p.Y, refPoint.X, refPoint.Y);
+      if (cx < x && cy < y) return IQuadrant.I;
+      else if (cx > x && cy < y) return IQuadrant.II;
+      else if (cx > x && cy > y) return IQuadrant.III;
+      else if (cx < x && cy > y) return IQuadrant.IV;
+      return IQuadrant.None;
+   }
    #endregion
 
    #region Private Data ---------------------------------------------
