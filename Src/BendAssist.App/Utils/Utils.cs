@@ -137,7 +137,7 @@ public static class BendUtils {
       return connectedLines.Count > 1;
    }
 
-   public static bool IsInside (this Line l, Bound2 b) => l.StartPoint.IsWithinBound(b) && l.EndPoint.IsWithinBound(b);
+   public static bool IsInside (this Line l, Bound2 b) => l.StartPoint.IsWithinBound (b) && l.EndPoint.IsWithinBound (b);
 
    /// <summary>Checks whether a point is within the bound</summary>
    public static bool IsWithinBound (this Point2 p, Bound2 b) => p.X <= b.MaxX && p.X >= b.MinX && p.Y <= b.MaxY && p.Y >= b.MinY;
@@ -185,6 +185,11 @@ public static class CommonUtils {
       var result = Regex.Split (str, @"(?=[A-Z])");
       return string.Join (" ", result);
    }
+
+   /// <summary>Clamps the given double to lie within min..max (inclusive)</summary>
+   public static double Clamp (this double a, double min, double max) => a < min ? min : (a > max ? max : a);
+   /// <summary>Clamps the given double to the range 0..1</summary>
+   public static double Clamp (this double a) => a < 0 ? 0 : (a > 1 ? 1 : a);
 
    /// <summary>Finds a quadrant of the given point using the reference point</summary>
    public static IQuadrant Quadrant (this Point2 p, Point2 refPoint) {
